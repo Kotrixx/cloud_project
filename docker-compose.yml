@@ -20,7 +20,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile_monitoring # Especificar la ruta del Dockerfile
+      dockerfile: app/Dockerfile_monitoring # Especificar la ruta del Dockerfile
     depends_on:
       db:
         condition: service_healthy

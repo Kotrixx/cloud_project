@@ -3,11 +3,11 @@ FROM python:3.10.15-slim
 WORKDIR /usr/src/app
 
 # Copiar el archivo de requerimientos y luego instalar las dependencias
-COPY requirements.txt ./
+COPY ../requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar el código completo, incluyendo database, monitoring y utils
-COPY . .
+COPY .. .
 
 # Establecer el directorio de trabajo para la ejecución
 WORKDIR /usr/src/app

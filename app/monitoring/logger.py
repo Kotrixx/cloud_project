@@ -1,7 +1,7 @@
 import logging
 import bcrypt
-from database.database import get_db, engine
-from database.models import Worker, create_tables
+from app.database.database import get_db, engine
+from app.database.models import Worker, create_tables
 from sqlalchemy.orm import Session
 
 
