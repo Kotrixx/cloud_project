@@ -19,8 +19,8 @@ services:
 
   app:
     build:
-      context: ./
-      dockerfile: Dockerfile_monitoring
+      context: .
+      dockerfile: Dockerfile_monitoring # Especificar la ruta del Dockerfile
     depends_on:
       db:
         condition: service_healthy
@@ -31,7 +31,7 @@ services:
       DB_PASSWORD: password
     ports:
       - "5000:5000"
-    command: python logger.py
+    command: python log_module/logger.py  # Cambiar al archivo correcto dentro del contenedor
 
 volumes:
   db_data:
