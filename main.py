@@ -1,16 +1,25 @@
-# This is a sample Python script.
-
-# Press Mayús+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import bcrypt
 
 
+# Función para encriptar una palabra usando bcrypt
+def encrypt_password(password):
+    # Hashear la contraseña usando bcrypt
+    password_hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    return password_hashed
+
+
+# Función de ejemplo que imprime un saludo
 def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+    print(f'Hi, {name}')  # Presionar Ctrl+F8 para alternar el punto de interrupción.
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    # Saludar con el nombre
     print_hi('PyCharm')
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # Encriptar la palabra "ubuntu" usando bcrypt
+    password = "ubuntu"
+    hashed_password = encrypt_password(password)
+
+    # Mostrar la contraseña encriptada
+    print(f'La contraseña encriptada es: {hashed_password.decode("utf-8")}')

@@ -1,0 +1,33 @@
+version: '3'
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: workers_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./script_mysql.sql:/docker-entrypoint-initdb.d/script_mysql.sql  # Montar el script SQL
+    ports:
+      - "3306:3306"
+
+  app:
+    build:
+      context: ./log_module
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_NAME: workers_db
+      DB_USER: user
+      DB_PASSWORD: password
+    volumes:
+      - ./log_module:/usr/src/app
+    ports:
+      - "5000:5000"
+    command: python logger.py
+
+volumes:
+  db_data:
