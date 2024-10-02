@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Establecer el directorio de trabajo para la ejecución
-WORKDIR /usr/src/app/log_module
+WORKDIR /usr/src/app
 
 # Ejecutar la aplicación
 CMD ["python", "logger.py"]
