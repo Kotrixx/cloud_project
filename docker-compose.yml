@@ -19,7 +19,8 @@ services:
 
   app:
     build:
-      context: ./log_module
+      context: ./
+      dockerfile: Dockerfile_monitoring
     depends_on:
       db:
         condition: service_healthy
