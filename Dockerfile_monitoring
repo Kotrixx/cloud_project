@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar el código completo, incluyendo db_module, log_module y utils
+# Copiar el código completo, incluyendo database, monitoring y utils
 COPY . .
 
 # Establecer el directorio de trabajo para la ejecución
