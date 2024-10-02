@@ -15,7 +15,8 @@ services:
 
   app:
     build:
-      context: ./log_module
+      context: .  # Set build context to project root
+      dockerfile: log_module/Dockerfile  # Specify Dockerfile path
     depends_on:
       - db
     environment:

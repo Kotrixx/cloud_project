@@ -1,14 +1,14 @@
-# Usar la imagen de Python 3.10-slim
 FROM python:3.10.15-slim
 
 WORKDIR /usr/src/app
 
-# Copiar el archivo de requerimientos y luego instalar las dependencias
-COPY ./requirements.txt ./
+# Copy the requirements file from the project root
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar el resto de los archivos de la aplicación
-COPY . .
+# Copy all necessary modules and packages
+COPY log_module/logger.py .
+COPY db_module/ ./db_module/
+COPY utils/ ./utils/
 
-# Ejecutar la aplicación
 CMD ["python", "logger.py"]
