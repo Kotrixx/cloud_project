@@ -1,8 +1,32 @@
 import logging
-import bcrypt
+import paramiko
 from app.database.database import get_db, engine
-from app.database.models import Monitoring, Worker, create_tables  # Añadimos Worker
+from app.database.models import Monitoring, Worker, create_tables
 from sqlalchemy.orm import Session
+
+
+# Función para ejecutar comandos SSH en un worker
+def ssh_execute_command(hostname, username, password, command):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, username=username, password=password)
+
+    stdin, stdout, stderr = ssh.exec_command(command)
+    output = stdout.read().decode('utf-8').strip()
+
+    ssh.close()
+    return output
+
+
+# Funciones para obtener el uso de CPU, RAM y Disco desde el worker
+def get_cpu_usage(hostname, username, password):
+    return ssh_execute_command(hostname, username, password, "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | xargs")
+
+def get_ram_usage(hostname, username, password):
+    return ssh_execute_command(hostname, username, password, "free | grep Mem | awk '{printf(\"%.0f\", $3/$2 * 100)}'")
+
+def get_disk_usage(hostname, username, password):
+    return ssh_execute_command(hostname, username, password, "df -h --output=source,size,used,avail | grep '^/dev'")
 
 
 # Configuración del logger
@@ -31,7 +55,6 @@ def create_monitoring_record(db: Session, hostname, ip, cpu_usage, ram_usage, di
         disk_usage=disk_usage,
         net_speed=net_speed,
         password_hashed=password_hashed
-        # No necesitamos pasar `timestamp`, se generará automáticamente
     )
     db.add(record)
     db.commit()
@@ -57,11 +80,28 @@ def main():
     for worker in workers:
         logger.info(f'Monitoreando el worker: {worker.hostname} ({worker.ip})')
 
-        # Ejemplo de valores de monitoreo (puedes reemplazar estos valores con los datos reales)
-        cpu_usage = 20.5  # Aquí puedes integrar la lógica de monitoreo real
-        ram_usage = 50.3
-        disk_usage = "50GB"
-        net_speed = "1000Mb/s"
+        # Aquí puedes integrar las credenciales reales (o extraerlas de la tabla workers)
+        username = 'ubuntu'
+        password = 'ubuntu'
+
+        # Obtener los valores de monitoreo reales mediante SSH
+        cpu_usage = get_cpu_usage(worker.hostname, username, password)
+        ram_usage = get_ram_usage(worker.hostname, username, password)
+        disk_usage = get_disk_usage(worker.hostname, username, password)
+        net_speed = get_network_speed(worker.hostname, username, password)  # Usar la nueva función
+
+        # Imprimir los valores en consola además de registrarlos en el log
+        print(f"Monitoreo de {worker.hostname} ({worker.ip})")
+        print(f"Uso de CPU: {cpu_usage}%")
+        print(f"Uso de RAM: {ram_usage}%")
+        print(f"Uso de Disco: {disk_usage}")
+        print(f"Velocidad de Red: {net_speed}")
+        print("\n")
+
+        logger.info(f"Uso de CPU: {cpu_usage}%")
+        logger.info(f"Uso de RAM: {ram_usage}%")
+        logger.info(f"Uso de Disco: {disk_usage}")
+        logger.info(f"Velocidad de Red: {net_speed}")
 
         # Crear un nuevo registro de monitoreo en la base de datos
         new_record = create_monitoring_record(
