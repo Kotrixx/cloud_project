@@ -46,14 +46,13 @@ def setup_logger():
 
 
 # Función para crear un nuevo registro en la tabla monitoring
-def create_monitoring_record(db: Session, hostname, ip, cpu_usage, ram_usage, disk_usage, net_speed, password_hashed=None):
+def create_monitoring_record(db: Session, hostname, ip, cpu_usage, ram_usage, disk_usage, password_hashed=None):
     record = Monitoring(
         hostname=hostname,
         ip=ip,
         cpu_usage=cpu_usage,
         ram_usage=ram_usage,
         disk_usage=disk_usage,
-        net_speed=net_speed,
         password_hashed=password_hashed
     )
     db.add(record)
@@ -88,20 +87,17 @@ def main():
         cpu_usage = get_cpu_usage(worker.hostname, username, password)
         ram_usage = get_ram_usage(worker.hostname, username, password)
         disk_usage = get_disk_usage(worker.hostname, username, password)
-        net_speed = get_network_speed(worker.hostname, username, password)  # Usar la nueva función
 
         # Imprimir los valores en consola además de registrarlos en el log
         print(f"Monitoreo de {worker.hostname} ({worker.ip})")
         print(f"Uso de CPU: {cpu_usage}%")
         print(f"Uso de RAM: {ram_usage}%")
         print(f"Uso de Disco: {disk_usage}")
-        print(f"Velocidad de Red: {net_speed}")
         print("\n")
 
         logger.info(f"Uso de CPU: {cpu_usage}%")
         logger.info(f"Uso de RAM: {ram_usage}%")
         logger.info(f"Uso de Disco: {disk_usage}")
-        logger.info(f"Velocidad de Red: {net_speed}")
 
         # Crear un nuevo registro de monitoreo en la base de datos
         new_record = create_monitoring_record(
@@ -111,7 +107,6 @@ def main():
             cpu_usage=cpu_usage,
             ram_usage=ram_usage,
             disk_usage=disk_usage,
-            net_speed=net_speed,
             password_hashed=worker.password_hashed
         )
         logger.info(f'Registro de monitoreo creado: {new_record.hostname} con timestamp {new_record.timestamp}')

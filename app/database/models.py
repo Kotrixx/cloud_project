@@ -33,6 +33,5 @@ class Monitoring(Base):
     cpu_usage = Column(Float)
     ram_usage = Column(Float)
     disk_usage = Column(String(255))
-    net_speed = Column(String(50))
     password_hashed = Column(String(255))  # Contraseña hasheada (opcional)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())  # Campo de timestamp

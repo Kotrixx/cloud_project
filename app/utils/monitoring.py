@@ -24,19 +24,3 @@ def get_ram_usage(hostname, username, password):
 
 def get_disk_usage(hostname, username, password):
     return ssh_execute_command(hostname, username, password, "df -h --output=source,size,used,avail | grep '^/dev'")
-
-
-def get_network_speed(hostname, username, password):
-    # Obtener la interfaz de red principal usando un comando para rutas (ip route)
-    interface_command = "ip route get 1 | awk '{print $5}'"
-
-    # Ejecutar el comando para obtener la interfaz de red
-    interface = ssh_execute_command(hostname, username, password, interface_command)
-
-    # Ejecutar el comando ethtool para obtener la velocidad de la interfaz de red
-    net_speed_command = f"ethtool {interface} | grep 'Speed' | awk '{{print $2}}'"
-
-    # Ejecutar el comando en el worker y obtener la salida
-    net_speed = ssh_execute_command(hostname, username, password, net_speed_command)
-
-    return net_speed
