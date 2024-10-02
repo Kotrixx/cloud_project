@@ -9,7 +9,7 @@ services:
       MYSQL_PASSWORD: password
     volumes:
       - db_data:/var/lib/mysql
-      - ./script_mysql.sql:/docker-entrypoint-initdb.d/script_mysql.sql  # Montar el script SQL
+      - ./script-mysql.sql:/docker-entrypoint-initdb.d/script-mysql.sql  # Montar el script SQL
     ports:
       - "3306:3306"
 
