@@ -1,8 +1,10 @@
 import paramiko
 import json
 import pandas as pd
+import threading
+import time
 
-
+# Función para ejecutar comandos SSH en cada worker
 def ssh_execute_command(hostname, username, password, command):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -14,88 +16,55 @@ def ssh_execute_command(hostname, username, password, command):
     ssh.close()
     return output
 
+# Funciones individuales para obtener CPU, RAM, disco y red
+def get_cpu_usage(hostname, username, password):
+    return ssh_execute_command(hostname, username, password, "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | xargs")
 
-def get_worker_info(hostname, username, password):
-    cpu_info = ssh_execute_command(hostname, username, password,
-                                   "lscpu | grep 'Model name' | awk -F: '{print $2}' | xargs")
-    cpu_cores = ssh_execute_command(hostname, username, password,
-                                    "lscpu | grep '^CPU(s):' | awk -F: '{print $2}' | xargs")
-    arch = ssh_execute_command(hostname, username, password,
-                               "lscpu | grep 'Architecture' | awk -F: '{print $2}' | xargs")
+def get_ram_usage(hostname, username, password):
+    return ssh_execute_command(hostname, username, password, "free | grep Mem | awk '{printf(\"%.0f\", $3/$2 * 100)}'")
 
-    ram_total = ssh_execute_command(hostname, username, password, "free -h | grep Mem | awk '{print $2}'")
-    ram_used = ssh_execute_command(hostname, username, password, "free -h | grep Mem | awk '{print $3}'")
+def get_disk_usage(hostname, username, password):
+    return ssh_execute_command(hostname, username, password, "df -h --output=source,size,used,avail | grep '^/dev'")
 
-    cpu_usage = ssh_execute_command(hostname, username, password,
-                                    "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | xargs")  # Obtener el % de uso de CPU
-    ram_usage = ssh_execute_command(hostname, username, password,
-                                    "free | grep Mem | awk '{printf(\"%.0f\", $3/$2 * 100)}'")  # % de RAM utilizada
+def get_network_speed(hostname, username, password):
+    return ssh_execute_command(hostname, username, password, "ethtool $(ip route get 1 | awk '{print $5}') | grep Speed | awk '{print $2}'")
 
-    disk_info = ssh_execute_command(hostname, username, password,
-                                    "df -h --output=source,size,used,avail | grep '^/dev'")
+# Función para monitorear constantemente un worker en un hilo separado
+def monitor_worker(hostname, username, password, monitor_interval=10):
+    while True:
+        cpu_usage = get_cpu_usage(hostname, username, password)
+        ram_usage = get_ram_usage(hostname, username, password)
+        disk_usage = get_disk_usage(hostname, username, password)
+        net_speed = get_network_speed(hostname, username, password)
 
-    # Obtenemos la capacidad de red
-    net_speed = ssh_execute_command(hostname, username, password,
-                                    "ethtool $(ip route get 1 | awk '{print $5}') | grep Speed | awk '{print $2}'")
+        print(f"--- Monitoreo del worker {hostname} ---")
+        print(f"Uso de CPU: {cpu_usage}%")
+        print(f"Uso de RAM: {ram_usage}%")
+        print("Uso de Disco:")
+        print(disk_usage)
+        print(f"Velocidad de red: {net_speed}")
+        print("\n")
 
-    return {
-        "hostname": hostname,
-        "cpu": {
-            "model": cpu_info,
-            "cores": cpu_cores,
-            "architecture": arch,
-            "usage_percent": cpu_usage
-        },
-        "ram": {
-            "total": ram_total,
-            "used": ram_used,
-            "used_percent": ram_usage
-        },
-        "disk": disk_info,
-        "network": {
-            "speed": net_speed
-        }
-    }
+        # Evaluar si el worker soportará una nueva máquina virtual (ajustar los umbrales si es necesario)
+        if float(cpu_usage) < 90 and float(ram_usage) < 90:
+            print(f"El worker {hostname} soporta una nueva máquina virtual.")
+        else:
+            print(f"El worker {hostname} NO soporta una nueva máquina virtual en este momento.")
 
+        # Esperar antes de la siguiente evaluación
+        time.sleep(monitor_interval)
 
-def print_worker_info(worker_info):
-    print(f"--- Información del worker {worker_info['hostname']} ---")
-    print(f"CPU: {worker_info['cpu']['model']}")
-    print(f"Núcleos: {worker_info['cpu']['cores']}")
-    print(f"Arquitectura: {worker_info['cpu']['architecture']}")
-    print(f"Uso de CPU: {worker_info['cpu']['usage_percent']}%")
-    print(f"RAM Total: {worker_info['ram']['total']}")
-    print(f"RAM Usada: {worker_info['ram']['used']} ({worker_info['ram']['used_percent']}%)")
-    print(f"Capacidad de Red: {worker_info['network']['speed']}")
-    print("Disco:")
-    print(worker_info['disk'])
-    print("\n")
+# Función para iniciar el monitoreo de todos los workers usando hilos
+def start_monitoring(workers):
+    threads = []
+    for worker in workers:
+        thread = threading.Thread(target=monitor_worker, args=(worker['hostname'], worker['username'], worker['password']))
+        thread.start()
+        threads.append(thread)
 
-
-def evaluate_worker(worker_info):
-    # Definimos los umbrales para la evaluación
-    cpu_usage_threshold = 80  # Porcentaje máximo de uso de CPU
-    ram_usage_threshold = 80  # Porcentaje máximo de uso de RAM
-
-    cpu_usage = float(worker_info['cpu']['usage_percent'])
-    ram_usage = float(worker_info['ram']['used_percent'])
-
-    if cpu_usage < cpu_usage_threshold and ram_usage < ram_usage_threshold:
-        return "El worker soporta la topología virtualizada"
-    else:
-        return "El worker NO soporta la topología virtualizada"
-
-
-def generate_reports(workers_info):
-    # Guardar como JSON
-    with open("workers_report.json", "w") as json_file:
-        json.dump(workers_info, json_file, indent=4)
-
-    # Crear un DataFrame para exportar a Excel
-    df = pd.DataFrame(workers_info)
-    df.to_excel("workers_report.xlsx", index=False)
-    print("Reportes generados: workers_report.json y workers_report.xlsx")
-
+    # Esperar a que todos los hilos terminen (opcional)
+    for thread in threads:
+        thread.join()
 
 # Lista de workers con sus credenciales
 workers = [
@@ -105,14 +74,5 @@ workers = [
     # Agrega más workers según sea necesario
 ]
 
-# Obtener información de todos los workers
-workers_info = []
-for worker in workers:
-    info = get_worker_info(worker['hostname'], worker['username'], worker['password'])
-    print_worker_info(info)  # Imprimir la información en consola
-    evaluation = evaluate_worker(info)  # Evaluar si el worker soportará la topología
-    info['evaluation'] = evaluation  # Agregar el resultado de la evaluación al worker
-    workers_info.append(info)
-
-# Generar los reportes
-generate_reports(workers_info)
+# Iniciar el monitoreo en hilos para cada worker
+start_monitoring(workers)
