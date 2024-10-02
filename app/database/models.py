@@ -4,18 +4,16 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
+
 # Modelo de la tabla workers
 class Worker(Base):
     __tablename__ = 'workers'
 
     id = Column(Integer, primary_key=True, index=True)
-    worker_name = Column(String(50), index=True)  # Nombre del worker (worker1, worker2, worker3)
-    hostname = Column(String(50), index=True)     # Hostname (ubuntu)
-    ip = Column(String(45), unique=True, index=True)  # Dirección IP, debe ser única
-    password_hashed = Column(String(255))  # Contraseña hasheada (opcional)
-
-    # Relación con la tabla worker_usage
-    usage_records = relationship("WorkerUsage", back_populates="worker")
+    worker_name = Column(String(50), index=True)  # Agregado para reflejar el worker_name en la base de datos
+    hostname = Column(String(50), index=True)
+    ip = Column(String(45), unique=True, index=True)
+    password_hashed = Column(String(255))
 
 
 # Modelo de la tabla worker_usage para registrar el consumo de los workers
