@@ -1,0 +1,16 @@
+FROM python:3.10
+
+WORKDIR /code
+
+# Copiar el archivo de requerimientos e instalar las dependencias
+COPY app/requirements.txt /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+# Copiar todo el código de la aplicación
+COPY . /code/
+
+# Establecer el PYTHONPATH para que Python pueda encontrar los módulos
+ENV PYTHONPATH=/code
+
+# Ejecutar la aplicación
+CMD ["python3", "./monitoring/logger.py"]
