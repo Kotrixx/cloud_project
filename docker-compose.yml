@@ -23,8 +23,6 @@ services:
       DB_NAME: workers_db
       DB_USER: user
       DB_PASSWORD: password
-    volumes:
-      - ./log_module:/usr/src/app
     ports:
       - "5000:5000"
     command: python logger.py
