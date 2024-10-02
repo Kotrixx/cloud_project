@@ -1,8 +1,7 @@
 import logging
 import bcrypt
-
 from app.database.database import get_db, engine
-from app.database.models import Worker, create_tables
+from app.database.models import Monitoring, Worker, create_tables  # Añadimos Worker
 from sqlalchemy.orm import Session
 
 
@@ -22,16 +21,9 @@ def setup_logger():
     return logger
 
 
-# Función para crear un nuevo registro en la tabla de workers
-def create_worker(db: Session, hostname, ip, cpu_usage, ram_usage, disk_usage, net_speed, password_plain=None):
-    # Hashear la contraseña si se proporciona
-    if password_plain:
-        password_hashed = bcrypt.hashpw(password_plain.encode('utf-8'), bcrypt.gensalt())
-        password_hashed = password_hashed.decode('utf-8')  # Convertir a cadena para almacenar en la base de datos
-    else:
-        password_hashed = None
-
-    worker = Worker(
+# Función para crear un nuevo registro en la tabla monitoring
+def create_monitoring_record(db: Session, hostname, ip, cpu_usage, ram_usage, disk_usage, net_speed, password_hashed=None):
+    record = Monitoring(
         hostname=hostname,
         ip=ip,
         cpu_usage=cpu_usage,
@@ -39,11 +31,12 @@ def create_worker(db: Session, hostname, ip, cpu_usage, ram_usage, disk_usage, n
         disk_usage=disk_usage,
         net_speed=net_speed,
         password_hashed=password_hashed
+        # No necesitamos pasar `timestamp`, se generará automáticamente
     )
-    db.add(worker)
+    db.add(record)
     db.commit()
-    db.refresh(worker)
-    return worker
+    db.refresh(record)
+    return record
 
 
 # Lógica principal de la aplicación
@@ -58,19 +51,30 @@ def main():
     db = next(get_db())
     logger.info('Sesión de base de datos iniciada')
 
-    # Monitorear un worker (aquí puedes integrar tu lógica de monitoreo)
-    hostname = 'worker1'
-    ip = '10.0.0.30'
-    cpu_usage = 20.5  # Ejemplo de valores
-    ram_usage = 50.3
-    disk_usage = "50GB"
-    net_speed = "1000Mb/s"
-    password_plain = 'ubuntu'  # Contraseña del worker
+    # Recuperar todos los workers de la tabla 'workers'
+    workers = db.query(Worker).all()
 
-    # Crear un nuevo registro del worker en la base de datos
-    new_worker = create_worker(db, hostname=hostname, ip=ip, cpu_usage=cpu_usage, ram_usage=ram_usage,
-                               disk_usage=disk_usage, net_speed=net_speed, password_plain=password_plain)
-    logger.info(f'Worker creado: {new_worker.hostname}')
+    for worker in workers:
+        logger.info(f'Monitoreando el worker: {worker.hostname} ({worker.ip})')
+
+        # Ejemplo de valores de monitoreo (puedes reemplazar estos valores con los datos reales)
+        cpu_usage = 20.5  # Aquí puedes integrar la lógica de monitoreo real
+        ram_usage = 50.3
+        disk_usage = "50GB"
+        net_speed = "1000Mb/s"
+
+        # Crear un nuevo registro de monitoreo en la base de datos
+        new_record = create_monitoring_record(
+            db,
+            hostname=worker.hostname,
+            ip=worker.ip,
+            cpu_usage=cpu_usage,
+            ram_usage=ram_usage,
+            disk_usage=disk_usage,
+            net_speed=net_speed,
+            password_hashed=worker.password_hashed
+        )
+        logger.info(f'Registro de monitoreo creado: {new_record.hostname} con timestamp {new_record.timestamp}')
 
     # Cerrar la sesión de la base de datos
     db.close()
