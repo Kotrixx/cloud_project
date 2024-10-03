@@ -1,18 +1,15 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from motor.motor_asyncio import AsyncIOMotorClient
+from beanie import init_beanie
+from app.database.models import Worker, WorkerUsage  # Importa tus modelos
 import os
+import asyncio
 
-# Configuración de la base de datos
-DATABASE_URL = (f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/"
-                f"{os.getenv('DB_NAME')}")
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+MONGO_URL = (f"mongodb+srv://aingetk_user:aingetk_user"
+             f"@cluster0.ek0es.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
 
-# Crear una sesión para conectarse a la base de datos
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Inicialización de la base de datos con Beanie y Motor
+async def init_db():
+    client = AsyncIOMotorClient(MONGO_URL)  # Crear un cliente asíncrono de Motor
+    db = client["cloud_test"]  # Seleccionar la base de datos, ajusta el nombre según tu configuración
+    return db
