@@ -1,4 +1,6 @@
 import asyncio
+from datetime import datetime
+
 import paramiko
 import time
 
@@ -41,9 +43,9 @@ async def create_monitoring_record(db, worker_id: ObjectId, cpu_usage: str, ram_
         "cpu_usage": cpu_usage,
         "ram_usage": ram_usage,
         "disk_usage": disk_usage,
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")  # Formato de tiempo legible
+        "timestamp": datetime.utcnow()  # Genera un timestamp válido en UTC
     }
-    await db["worker_usage"].insert_one(usage)  # Inserta el registro de monitoreo en la colección worker_usage
+    await db["worker_usage"].insert_one(usage)
 
 
 # Lógica principal de la aplicación
