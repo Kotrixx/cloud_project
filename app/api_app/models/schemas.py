@@ -27,10 +27,22 @@ class WorkerOutput(BaseModel):
     ip: str
 
 
-
 class WorkerUsageOutput(BaseModel):
     worker_id: str
     cpu_usage: float
     ram_usage: float
     disk_usage: str
     timestamp: datetime
+
+
+class RingTopologyInput(BaseModel):
+    name: str
+    nodes: int
+    topology_name: str
+    vlan_tags: dict
+    dnsmasq_configs: dict
+    gateway_ips: dict
+    subinterfaces: dict
+    veth_pairs: list
+    namespaces: list
+    creation_timestamp: str

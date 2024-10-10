@@ -1,5 +1,59 @@
 import subprocess
 import psutil
+import requests
+
+def list_topologies_request():
+    # URL de tu endpoint
+    url = "http://localhost:8080/linux_cluster/topologies"
+
+    try:
+        # Hacer la solicitud GET
+        response = requests.get(url)
+
+        # Verificar que la solicitud fue exitosa
+        if response.status_code == 200:
+            topologies = response.json()
+
+            # Mostrar la información de manera legible
+            for topology in topologies:
+                print(f"ID: {topology['_id']}")
+                print(f"Name: {topology['name']}")
+                print(f"Nodes: {topology['nodes']}")
+                print(f"Topology Name: {topology['topology_name']}")
+                print("VLAN Tags:")
+                for veth, vlan in topology['vlan_tags'].items():
+                    print(f"  {veth}: {vlan}")
+
+                print("DNSMasq Configurations:")
+                for namespace, config in topology['dnsmasq_configs'].items():
+                    print(f"  Namespace {namespace}:")
+                    for key, value in config.items():
+                        print(f"    {key}: {value}")
+
+                print("Gateway IPs:")
+                for subinterface, ip in topology['gateway_ips'].items():
+                    print(f"  {subinterface}: {ip}")
+
+                print("Subinterfaces:")
+                for subinterface, vlan in topology['subinterfaces'].items():
+                    print(f"  {subinterface}: VLAN {vlan}")
+
+                print("Veth Pairs:")
+                for pair in topology['veth_pairs']:
+                    print(f"  {pair[0]} <--> {pair[1]}")
+
+                print("Namespaces:")
+                for namespace in topology['namespaces']:
+                    print(f"  {namespace}")
+
+                print(f"Creation Timestamp: {topology['creation_timestamp']}")
+                print(f"Topology Type: {topology['topology_type']}")
+                print("-" * 40)
+        else:
+            print(f"Error al obtener los topologías: {response.status_code}")
+
+    except Exception as e:
+        print(f"Ha ocurrido un error: {str(e)}")
 
 
 def mostrar_menu():
@@ -52,8 +106,10 @@ def editar_slice():
 
 
 def listar_slices():
-    print("Listando los slices existentes:")
-    # Ejemplo para listar VMs en KVM
+    print("Listando los slices existentes...")
+    # Llamar a la función para listar las topologías
+    list_topologies_request()
+    # También puedes listar las VMs en KVM como lo hacías antes
     subprocess.run(['virsh', 'list', '--all'])
 
 
@@ -91,7 +147,7 @@ def main():
         elif opcion == "2":
             editar_slice()
         elif opcion == "3":
-            listar_slices()
+            listar_slices()  # Aquí se llama la función para listar slices y topologías
         elif opcion == "4":
             borrar_slice()
         elif opcion == "5":

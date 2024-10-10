@@ -7,8 +7,8 @@ import time
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.models.database import init_db
-from app.models.models import Worker
+from app.api_app.models.database import init_db
+from app.api_app.models.models import Worker
 
 
 # Función para ejecutar comandos SSH en un worker

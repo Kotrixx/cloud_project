@@ -92,6 +92,7 @@ def limpiar_worker(worker):
     print(f"Limpieza completa en Worker {worker}")
 
 
+"""
 # Main - Selección del Worker
 worker_seleccionado = input("Selecciona el Worker a limpiar (1, 2 o 3): ")
-limpiar_worker(worker_seleccionado)
+limpiar_worker(worker_seleccionado)"""

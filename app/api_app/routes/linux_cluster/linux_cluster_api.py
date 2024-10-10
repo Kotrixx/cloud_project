@@ -4,16 +4,88 @@ from beanie import PydanticObjectId
 from fastapi import HTTPException
 from starlette import status
 
-from app.api_app.models.models import Worker, WorkerUsage
-from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput
+from app.api_app.models.models import Worker, WorkerUsage, Topology
+from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput, RingTopologyInput
 from app.api_app.routes.linux_cluster import router
+from app.utils.headnode_utils import create_ring_topology
+from app.utils.llenar_worker import configurar_worker
 
 
-@router.get("/")
-async def get_devices():
+@router.get("/workers")
+async def get_workers():
     workers = await Worker.all().to_list()
 
     return workers
+
+
+@router.get("/topologies")
+async def get_topologies():
+    topologies = await Topology.all().to_list()
+    return topologies
+
+
+@router.get("/workers_usage")
+async def get_workers_usage():
+    usage = await WorkerUsage.last().to_list()
+
+    return usage
+
+
+@router.post("/ring")
+async def create_device(topology: RingTopologyInput):
+    if topology.nodes != len(topology.node_networks):
+        raise HTTPException(
+            status_code=400,
+            detail=f"node_networks must contain {topology.nodes} entries"
+        )
+
+    if topology.nodes != len(topology.dhcp_settings):
+        raise HTTPException(
+            status_code=400,
+            detail=f"dhcp_settings must contain {topology.nodes} entries"
+        )
+
+    ring_topology_object = Topology(
+        nodes=topology.nodes,
+        topology_name=topology.name,
+        node_networks=topology.node_networks,
+        dhcp_settings=topology.dhcp_settings,
+        vlan_settings=topology.vlan_settings,
+        creation_timestamp=datetime.fromisoformat(topology.creation_timestamp),
+        topology_type="ring"
+    )
+    topology_data = topology.dict()
+
+    # Call the function that configures the topology
+    create_ring_topology_from_json(topology_data)
+    print("asdsadasd")
+    await ring_topology_object.insert()
+
+    return {"message": "Topology created successfully"}
+
+
+@router.post("/vms")
+async def create_device(
+        worker: int
+):
+    print(worker)
+    configurar_worker(worker)
+    # configurar_worker(2)
+    # configurar_worker(3)
+    return {"message": "Topology created successfully"}
+
+
+def create_ring_topology_from_json(data: dict):
+    create_ring_topology(
+        ovs_br_name='br-int',
+        namespaces=data['namespaces'],
+        veth_pairs=data['veth_pairs'],
+        subinterfaces=data['subinterfaces'],
+        gateway_ips=data['gateway_ips'],
+        dnsmasq_configs=data['dnsmasq_configs'],
+        vlan_tags=data['vlan_tags'],
+        network_name=data['name']
+    )
 
 
 """
