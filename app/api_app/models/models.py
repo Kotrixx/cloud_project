@@ -14,7 +14,7 @@ class Worker(Document):
 
     class Settings:
         collection = "workers"  # Corregido el nombre para consistencia plural
-        # Puedes agregar índices o configuraciones adicionales aquí si es necesario
+        name = "workers"  # Corregido el nombre para consistencia plural
 
 
 class WorkerUsage(Document):

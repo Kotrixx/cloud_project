@@ -26,8 +26,6 @@ class WorkerOutput(BaseModel):
     hostname: str
     ip: str
 
-    class Config:
-        orm_mode = True
 
 
 class WorkerUsageOutput(BaseModel):
@@ -36,6 +34,3 @@ class WorkerUsageOutput(BaseModel):
     ram_usage: float
     disk_usage: str
     timestamp: datetime
-
-    class Config:
-        orm_mode = True
