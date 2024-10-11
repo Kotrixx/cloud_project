@@ -41,7 +41,7 @@ def configure_veth_pairs(veth_pairs, ovs_br_name):
 # Function to create subinterfaces on the OVS bridge and assign VLANs
 def configure_subinterfaces(subinterfaces):
     for subinterface, vlan in subinterfaces.items():
-        run_sudo_command(f'ip link add link br-int name {subinterface} type vlan id {vlan}',
+        run_sudo_command(f'ip link add link {ovs_br_name} name {subinterface} type vlan id {vlan}',
                          f"Creating subinterface {subinterface} with VLAN {vlan}...")
         run_sudo_command(f'ip link set dev {subinterface} up', f"Bringing up subinterface {subinterface}...")
 
@@ -54,6 +54,7 @@ def assign_gateway_ips(gateway_ips):
 
 # Function to assign IPs to veth interfaces in the namespaces
 def assign_veth_ips(veth_ips):
+    # todo a
     for ns, ip in veth_ips.items():
         run_sudo_command(f'ip netns exec {ns} ip address add {ip} dev veth-ns{ns[-3:]}',
                          f"Assigning IP {ip} to {ns}...")
@@ -75,8 +76,9 @@ def assign_vlan_tags(vlan_tags):
 
 # Function to set the physical interface as a trunk for VLANs
 def configure_trunk_interface(phy_iface):
-    run_sudo_command(f'ovs-vsctl set port {phy_iface} trunk=100,200,300,400',
-                     f"Configuring {phy_iface} as a trunk for VLANs 100, 200, 300, and 400...")
+    #run_sudo_command(f'ovs-vsctl set port {phy_iface} trunk=100,200,300,400',
+    run_sudo_command(f'ovs-vsctl set port {phy_iface} trunk={vlan_tags}',
+                     f"Configuring {phy_iface} as a trunk for VLANs {vlan_tags}...")
 
 
 # Function to apply NAT rules

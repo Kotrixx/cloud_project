@@ -75,9 +75,7 @@ async def create_monitoring_record(db, worker_id: ObjectId, cpu_usage: str, ram_
 # Lógica principal de la aplicación
 async def main():
     # Inicializar la base de datos y obtener la conexión a la base de datos
-    db = await init_db()
 
-    # Recuperar todos los workers utilizando Beanie
     workers = await Worker.find().to_list()
     print(f"Trabajadores desde Beanie: {workers}")
 
