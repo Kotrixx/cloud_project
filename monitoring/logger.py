@@ -80,7 +80,7 @@ async def create_monitoring_record(api_url, worker_id: ObjectId, cpu_usage: str,
 
 # Lógica principal de la aplicación
 async def main():
-    api_url = "http://central_api:8080"
+    api_url = "http://localhost:8080/linux_cluster"
 
     # Obtener los trabajadores desde la API
     async with httpx.AsyncClient() as client:
