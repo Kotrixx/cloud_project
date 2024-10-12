@@ -10,7 +10,7 @@ services:
     depends_on:
       - central_api
 
-  api:
+  central_api:
     container_name: central_api
     build: ./app/
     restart: always
