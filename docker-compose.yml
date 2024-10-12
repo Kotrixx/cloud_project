@@ -10,7 +10,7 @@ services:
 
   api:
     container_name: mock-ecm-app
-    build: ./app
+    build: ./app/api_app
     restart: always
     ports:
       - "127.0.0.1:8080:8080"
