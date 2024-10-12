@@ -44,7 +44,7 @@ async def insert_monitoring_record(record: WorkerUsageOutput):
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
     result = await WorkerUsage.insert_one(monitoring_record)
-    return {"status": "success", "inserted_id": str(result.inserted_id)}
+    return {"status": "success", "result": str(result)}
 
 
 @router.post("/ring")

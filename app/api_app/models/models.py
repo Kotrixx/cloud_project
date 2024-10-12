@@ -27,7 +27,7 @@ class WorkerUsage(Document):
 
     class Settings:
         collection = "worker_usages"  # Corregido el nombre para consistencia plural
-        # Índices o configuraciones adicionales pueden ser añadidas aquí
+        name = "worker_usage"
 
 
 class Topology(Document):
