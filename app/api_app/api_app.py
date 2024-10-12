@@ -4,7 +4,6 @@ from typing import AsyncGenerator
 
 from app.api_app.middleware.logging_middleware import request_logger
 from app.api_app.models.database import init_db
-from app.api_app.routes.device import device_api as device_routes
 from app.api_app.routes.linux_cluster import linux_cluster_api as linux_cluster_routes
 
 

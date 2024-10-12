@@ -7,10 +7,12 @@ services:
     ports:
       - "5000:5000"
     command: python monitoring/logger.py  # Cambiar al archivo correcto dentro del contenedor
+    depends_on:
+      - central_api
 
   api:
-    container_name: mock-ecm-app
-    build: ./app/api_app
+    container_name: central_api
+    build: ./app/
     restart: always
     ports:
       - "127.0.0.1:8080:8080"
