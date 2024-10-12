@@ -39,7 +39,7 @@ async def insert_monitoring_record(record: WorkerUsageOutput):
     monitoring_record = WorkerUsage(
         worker_id=worker_id,
         cpu_usage=record.cpu_usage,
-        memory_usage=record.memory_usage,
+        ram_usage=record.ram_usage,
         disk_usage=record.disk_usage,
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
