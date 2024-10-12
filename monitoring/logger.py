@@ -67,9 +67,9 @@ async def create_monitoring_record(api_url, worker_id: ObjectId, cpu_usage: str,
         cpu_usage=float(cpu_usage),
         ram_usage=float(ram_usage),
         disk_usage=disk_usage,  # Lista de diccionarios de la función parse_disk_usage
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow().isoformat()
     )
-    usage['timestamp'] = datetime.utcnow().isoformat()
+    # usage['timestamp'] = datetime.utcnow().isoformat()
 
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{api_url}/monitoring", json=usage.dict())  # Convertimos a dict para enviar el JSON
