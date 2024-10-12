@@ -86,7 +86,7 @@ async def main():
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{api_url}/workers")
         workers = response.json()
-
+    print(workers)
     for worker in workers:
         print(f'Monitoreando el worker: {worker["hostname"]} ({worker["ip"]})')
 
