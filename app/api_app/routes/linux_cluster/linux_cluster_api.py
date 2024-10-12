@@ -41,7 +41,7 @@ async def insert_monitoring_record(record: WorkerUsageOutput):
         cpu_usage=record.cpu_usage,
         memory_usage=record.memory_usage,
         disk_usage=record.disk_usage,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
     result = await WorkerUsage.insert_one(monitoring_record)
     return {"status": "success", "inserted_id": str(result.inserted_id)}

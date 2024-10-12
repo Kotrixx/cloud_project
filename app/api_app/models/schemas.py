@@ -32,7 +32,7 @@ class WorkerUsageOutput(BaseModel):
     cpu_usage: float
     ram_usage: float
     disk_usage: list
-    timestamp: datetime
+    timestamp: str
 
 
 class RingTopologyInput(BaseModel):
