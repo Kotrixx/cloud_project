@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 
+import httpx
 import paramiko
 import time
 
@@ -8,7 +9,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.api_app.models.database import init_db
-from app.api_app.models.models import Worker
+from app.api_app.models.schemas import WorkerUsageOutput
 
 
 # Función para ejecutar comandos SSH en un worker
@@ -60,44 +61,44 @@ def get_disk_usage(hostname, username, password):
     return parse_disk_usage(output)
 
 
-# Función para crear un nuevo registro de monitoreo en MongoDB
-async def create_monitoring_record(db, worker_id: ObjectId, cpu_usage: str, ram_usage: str, disk_usage: list):
-    usage = {
-        "worker_id": worker_id,
-        "cpu_usage": cpu_usage,
-        "ram_usage": ram_usage,
-        "disk_usage": disk_usage,  # Almacenamos la lista de diccionarios
-        "timestamp": datetime.utcnow()  # Genera un timestamp válido en UTC
-    }
-    await db["worker_usage"].insert_one(usage)
+async def create_monitoring_record(api_url, worker_id: ObjectId, cpu_usage: str, ram_usage: str, disk_usage: list):
+    usage = WorkerUsageOutput(
+        worker_id=str(worker_id),
+        cpu_usage=float(cpu_usage),
+        ram_usage=float(ram_usage),
+        disk_usage=disk_usage,  # Lista de diccionarios de la función parse_disk_usage
+        timestamp=datetime.utcnow()
+    )
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(f"{api_url}/monitoring", json=usage.dict())  # Convertimos a dict para enviar el JSON
+        if response.status_code == 200:
+            print(f"Registro de monitoreo creado correctamente para {worker_id}")
+        else:
+            print(f"Error al crear el registro de monitoreo: {response.text}")
 
 
 # Lógica principal de la aplicación
 async def main():
-    # Inicializar la base de datos y obtener la conexión a la base de datos
+    api_url = "http://localhost:8000"
 
-    workers = await Worker.find().to_list()
-    print(f"Trabajadores desde Beanie: {workers}")
+    # Obtener los trabajadores desde la API
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{api_url}/workers")
+        workers = response.json()
 
     for worker in workers:
-        print(f'Monitoreando el worker: {worker.hostname} ({worker.ip})')
+        print(f'Monitoreando el worker: {worker["hostname"]} ({worker["ip"]})')
 
-        # Usamos la contraseña hasheada directamente del documento Worker
-        username = worker.hostname  # Suponiendo que este es el nombre de usuario en los servidores
-        password = worker.password_hashed  # La contraseña viene desde el campo password_hashed
+        username = worker["hostname"]
+        password = worker["password_hashed"]
 
-        # Obtener los valores de monitoreo reales mediante SSH
-        cpu_usage = get_cpu_usage(worker.ip, username, password)
-        ram_usage = get_ram_usage(worker.ip, username, password)
-        disk_usage = get_disk_usage(worker.ip, username, password)
+        cpu_usage = get_cpu_usage(worker["ip"], username, password)
+        ram_usage = get_ram_usage(worker["ip"], username, password)
+        disk_usage = get_disk_usage(worker["ip"], username, password)
 
-        print(f"Monitoreo de {worker.hostname} ({worker.ip})")
-        print(f"Uso de CPU: {cpu_usage}%")
-        print(f"Uso de RAM: {ram_usage}%")
-        print(f"Uso de Disco: {disk_usage}")
+        await create_monitoring_record(api_url, worker["_id"], cpu_usage, ram_usage, disk_usage)
 
-        # Crear un nuevo registro de monitoreo en MongoDB usando Beanie
-        await create_monitoring_record(worker.id, cpu_usage, ram_usage, disk_usage)
 
 if __name__ == '__main__':
     asyncio.run(main())

@@ -22,7 +22,7 @@ class WorkerUsage(Document):
     worker_id: str = Field(...)
     cpu_usage: float = Field(...)
     ram_usage: float = Field(...)
-    disk_usage: str = Field(...)
+    disk_usage: list = Field(...)
     timestamp: datetime = Field(...)
 
     class Settings:

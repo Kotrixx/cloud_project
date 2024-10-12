@@ -31,7 +31,7 @@ class WorkerUsageOutput(BaseModel):
     worker_id: str
     cpu_usage: float
     ram_usage: float
-    disk_usage: str
+    disk_usage: list
     timestamp: datetime
 
 

@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from app.api_app.models.models import Worker, WorkerUsage, Topology
-from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput, RingTopologyInput
+from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput, RingTopologyInput, WorkerUsageOutput
 from app.api_app.routes.linux_cluster import router
 from app.utils.headnode_utils import create_ring_topology
 from app.utils.llenar_worker import configurar_worker
@@ -29,6 +29,22 @@ async def get_workers_usage():
     usage = await WorkerUsage.last().to_list()
 
     return usage
+
+
+@router.post("/monitoring")
+async def insert_monitoring_record(record: WorkerUsageOutput):
+    worker_id = record.worker_id
+
+    # Insertar el registro en la base de datos
+    monitoring_record = WorkerUsage(
+        worker_id=worker_id,
+        cpu_usage=record.cpu_usage,
+        memory_usage=record.memory_usage,
+        disk_usage=record.disk_usage,
+        timestamp=datetime.now(timezone.utc),
+    )
+    result = await WorkerUsage.insert_one(monitoring_record)
+    return {"status": "success", "inserted_id": str(result.inserted_id)}
 
 
 @router.post("/ring")
