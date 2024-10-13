@@ -9,9 +9,12 @@ from app.api_app.models.models import Worker, WorkerUsage, Topology
 from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput, RingTopologyInput, WorkerUsageOutput
 from app.api_app.routes.linux_cluster import router
 from app.utils.headnode_utils import create_ring_topology
+from app.utils.limpiar_headnode1 import conectar_ssh, limpiar_headnode
+from app.utils.limpiar_worker import limpiar_worker
 from app.utils.llenar_headnode_paramiko import configurar_headnode
 from app.utils.llenar_worker import configurar_worker
 from app.utils.llenar_worker_new import procesar_workers
+from app.utils.monitoring import get_cpu_usage, get_ram_usage, get_disk_usage
 
 
 @router.get("/workers")
@@ -27,11 +30,30 @@ async def get_topologies():
     return topologies
 
 
-@router.get("/workers_usage")
+@router.get("/workers/usage/now")
 async def get_workers_usage():
-    usage = await WorkerUsage.last().to_list()
+    workers = await Worker.all().to_list()
+    print(workers)
+    usage_list = []
+    for worker in workers:
+        print(worker)
+        print(f'Monitoreando el worker: {worker.hostname} ({worker.ip})')
 
-    return usage
+        username = worker.hostname
+        password = worker.password_hashed
+
+        cpu_usage = get_cpu_usage(worker.ip, username, password)
+        ram_usage = get_ram_usage(worker.ip, username, password)
+        disk_usage = get_disk_usage(worker.ip, username, password)
+        usage = WorkerUsageOutput(
+            worker_id=str(worker["_id"]),
+            cpu_usage=float(cpu_usage),
+            ram_usage=float(ram_usage),
+            disk_usage=disk_usage,  # Lista de diccionarios de la función parse_disk_usage
+            timestamp=datetime.utcnow().isoformat()
+        )
+        usage_list.append(usage)
+    return {usage: usage for usage in usage_list}
 
 
 @router.post("/monitoring")
@@ -137,6 +159,29 @@ async def configurar(request: Request):
         contrasena2 = "kotrix123"
         configurar_headnode(json_data, usuario, contrasena2, '10.0.10.2')
         procesar_workers(json_data, usuario, contrasena)
+        return {"message": "Configuración completada con éxito"}
+    except Exception as e:
+        error_message = f"Error al procesar la solicitud: {str(e)}"
+        error_traceback = traceback.format_exc()  # Obtiene la traza completa del error
+        raise HTTPException(status_code=400, detail=f"{error_message}\nTraceback: {error_traceback}")
+
+
+@router.post("/limpiar_topologia")
+async def limpiar_topo():
+    try:
+        # Leer el cuerpo del request y convertirlo a JSON
+
+        # Llamar a las funciones con los datos del JSON
+        usuario = "ubuntu"
+        contrasena = 'ubuntu'
+        contrasena2 = "kotrix123"
+
+        ssh_client = conectar_ssh("10.0.10.2", usuario, contrasena2)
+        limpiar_headnode(ssh_client, contrasena2)
+        ssh_client.close()
+        limpiar_worker(1)
+        limpiar_worker(2)
+        limpiar_worker(3)
         return {"message": "Configuración completada con éxito"}
     except Exception as e:
         error_message = f"Error al procesar la solicitud: {str(e)}"
