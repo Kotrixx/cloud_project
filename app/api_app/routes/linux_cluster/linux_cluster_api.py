@@ -46,7 +46,7 @@ async def get_workers_usage():
         ram_usage = get_ram_usage(worker.ip, username, password)
         disk_usage = get_disk_usage(worker.ip, username, password)
         usage = WorkerUsageOutput(
-            worker_id=str(worker.worker_id),
+            worker_id=str(worker.id),
             cpu_usage=float(cpu_usage),
             ram_usage=float(ram_usage),
             disk_usage=disk_usage,  # Lista de diccionarios de la función parse_disk_usage
