@@ -1,3 +1,6 @@
+import paramiko
+import json
+
 # Función para ejecutar los comandos en el worker
 def ejecutar_comandos_worker(cliente, worker_config):
     bridge = worker_config['bridge']
