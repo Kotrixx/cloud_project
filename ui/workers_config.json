@@ -18,7 +18,13 @@
               "vlan": 400,
               "red": "10.0.50.24/29"
             }
-          ]
+          ],
+          "flavor": {
+            "distribucion": "ubuntu",
+            "cpu_cores": 1,
+            "ram": "0.5GB",
+            "disk": "1GB"
+          }
         },
         "vm4": {
           "interfaces": [
@@ -34,7 +40,13 @@
               "vlan": 300,
               "red": "10.0.50.16/29"
             }
-          ]
+          ],
+          "flavor": {
+            "distribucion": "ubuntu",
+            "cpu_cores": 1,
+            "ram": "0.5GB",
+            "disk": "1GB"
+          }
         }
       }
     },
@@ -62,7 +74,13 @@
               "vlan": 500,
               "red": "10.0.50.32/29"
             }
-          ]
+          ],
+          "flavor": {
+            "distribucion": "cirros",
+            "cpu_cores": 1,
+            "ram": "256MB",
+            "disk": "2GB"
+          }
         },
         "vm5": {
           "interfaces": [
@@ -78,7 +96,13 @@
               "vlan": 600,
               "red": "10.0.50.40/29"
             }
-          ]
+          ],
+          "flavor": {
+            "distribucion": "ubuntu",
+            "cpu_cores": 1,
+            "ram": "0.5GB",
+            "disk": "1GB"
+          }
         }
       }
     },
@@ -100,7 +124,13 @@
               "vlan": 300,
               "red": "10.0.50.16/29"
             }
-          ]
+          ],
+          "flavor": {
+            "distribucion": "ubuntu",
+            "cpu_cores": 1,
+            "ram": "0.5GB",
+            "disk": "1GB"
+          }
         },
         "vm6": {
           "interfaces": [
@@ -110,7 +140,13 @@
               "vlan": 600,
               "red": "10.0.50.40/29"
             }
-          ]
+          ],
+          "flavor": {
+            "distribucion": "cirros",
+            "cpu_cores": 1,
+            "ram": "256MB",
+            "disk": "2GB"
+          }
         }
       }
     }
