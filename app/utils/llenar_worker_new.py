@@ -33,7 +33,7 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
                 (f"ip link set {tap_name} up", f"Levantando {tap_name}..."),
                 (f"ovs-vsctl add-port {bridge} {tap_name}", f"Conectando {tap_name} al bridge..."),
                 (f"ovs-vsctl set port {tap_name} tag={vlan_tag}", f"Asignando tag VLAN {vlan_tag} a {tap_name}..."),
-                (f"ip link set {tap_name} address {mac_address}", f"Asignando MAC {mac_address} a {tap_name}...")
+                (f"ip link set {tap_name} address {mac_address}", f"Asignando MAC {mac_address} a {tap_name}..."),
                 (f"ovs-vsctl add-port {bridge} ens4", f"Conectando ens4 al bridge {bridge}..."),
                 (f"ovs-vsctl set port ens4 trunk={','.join(vlans)}",
                  f"Configurando ens4 como troncal para las VLANs {','.join(vlans)}...")
