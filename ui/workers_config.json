@@ -22,8 +22,8 @@
           "flavor": {
             "distribucion": "ubuntu",
             "cpu_cores": 1,
-            "ram": "0.5GB",
-            "disk": "1GB"
+            "ram": "0.5G",
+            "disk": "1G"
           }
         },
         "vm4": {
@@ -44,8 +44,8 @@
           "flavor": {
             "distribucion": "ubuntu",
             "cpu_cores": 1,
-            "ram": "0.5GB",
-            "disk": "1GB"
+            "ram": "0.5G",
+            "disk": "1G"
           }
         }
       }
@@ -78,8 +78,8 @@
           "flavor": {
             "distribucion": "cirros",
             "cpu_cores": 1,
-            "ram": "256MB",
-            "disk": "0.5GB"
+            "ram": "256M",
+            "disk": "0.5G"
           }
         },
         "vm5": {
@@ -100,8 +100,8 @@
           "flavor": {
             "distribucion": "ubuntu",
             "cpu_cores": 1,
-            "ram": "0.5GB",
-            "disk": "1GB"
+            "ram": "0.5G",
+            "disk": "1G"
           }
         }
       }
@@ -128,8 +128,8 @@
           "flavor": {
             "distribucion": "ubuntu",
             "cpu_cores": 1,
-            "ram": "0.5GB",
-            "disk": "1GB"
+            "ram": "0.5G",
+            "disk": "1G"
           }
         },
         "vm6": {
@@ -144,8 +144,8 @@
           "flavor": {
             "distribucion": "cirros",
             "cpu_cores": 1,
-            "ram": "256MB",
-            "disk": "0.5GB"
+            "ram": "256M",
+            "disk": "0.5G"
           }
         }
       }
