@@ -4,9 +4,11 @@ import ipaddress
 
 
 # Función para ejecutar comandos vía SSH utilizando Paramiko
-def ejecutar_comando_ssh(ssh_client, comando, descripcion=""):
+def ejecutar_comando_ssh(ssh_client, comando, descripcion="", contrasena=None):
     if descripcion:
         print(descripcion)
+    if contrasena:
+        comando = f'echo "{contrasena}" | sudo -S {comando}'
     stdin, stdout, stderr = ssh_client.exec_command(comando)
     salida = stdout.read().decode('utf-8')
     error = stderr.read().decode('utf-8')
@@ -34,24 +36,24 @@ def obtener_ip_superior(subred, offset):
 def configurar_headnode(config, usuario, contrasena, ip_destino):
     print("Configuración iniciada en HeadNode")
 
-    # Establecer conexión SSH utilizando Paramiko en el puerto 5800
+    # Establecer conexión SSH utilizando Paramiko en el puerto 22
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh_client.connect(ip_destino, username=usuario, password=contrasena, port=22)
 
-    # Actualizar el sistema
-    ejecutar_comando_ssh(ssh_client, 'apt-get update', "Actualizando el sistema... (esto puede tardar, no detener el programa)")
+    # Actualizar el sistema con sudo
+    ejecutar_comando_ssh(ssh_client, 'apt-get update', "Actualizando el sistema... (esto puede tardar, no detener el programa)", contrasena)
 
-    # Crear un nuevo OVS llamado br-int
-    ejecutar_comando_ssh(ssh_client, 'ovs-vsctl add-br br-int', "Creando el bridge OVS br-int...")
-    ejecutar_comando_ssh(ssh_client, 'ip link set dev br-int up', "Levantando el bridge br-int...")
+    # Crear un nuevo OVS llamado br-int con sudo
+    ejecutar_comando_ssh(ssh_client, 'ovs-vsctl add-br br-int', "Creando el bridge OVS br-int...", contrasena)
+    ejecutar_comando_ssh(ssh_client, 'ip link set dev br-int up', "Levantando el bridge br-int...", contrasena)
 
-    # Prender interfaz ens5 y agregarla al OVS
-    ejecutar_comando_ssh(ssh_client, 'ip link set ens5 up', "Levantando la interfaz ens5...")
-    ejecutar_comando_ssh(ssh_client, 'ovs-vsctl add-port br-int ens5', "Conectando la interfaz ens5 al OVS...")
+    # Prender interfaz ens5 y agregarla al OVS con sudo
+    ejecutar_comando_ssh(ssh_client, 'ip link set ens5 up', "Levantando la interfaz ens5...", contrasena)
+    ejecutar_comando_ssh(ssh_client, 'ovs-vsctl add-port br-int ens5', "Conectando la interfaz ens5 al OVS...", contrasena)
 
-    # Activar IPv4 Forwarding
-    ejecutar_comando_ssh(ssh_client, 'sysctl -w net.ipv4.ip_forward=1', "Activando IPv4 Forwarding...")
+    # Activar IPv4 Forwarding con sudo
+    ejecutar_comando_ssh(ssh_client, 'sysctl -w net.ipv4.ip_forward=1', "Activando IPv4 Forwarding...", contrasena)
 
     # Procesar cada VLAN
     vlans = config['vlans']
@@ -67,10 +69,10 @@ def configurar_headnode(config, usuario, contrasena, ip_destino):
         veth_ovs = f'veth-ovs{vlan_tag}'
         veth_ns = f'veth-ns{vlan_tag}'
 
-        # Crear namespace y levantarlo
-        ejecutar_comando_ssh(ssh_client, f'ip netns add {ns}', f"Creando el namespace {ns}...")
+        # Crear namespace y levantarlo con sudo
+        ejecutar_comando_ssh(ssh_client, f'ip netns add {ns}', f"Creando el namespace {ns}...", contrasena)
         ejecutar_comando_ssh(ssh_client, f'ip netns exec {ns} ip link set dev lo up',
-                             f"Levantando la interfaz loopback en {ns}...")
+                             f"Levantando la interfaz loopback en {ns}...", contrasena)
 
         # Añadir el par de veths
         veth_pairs.append((veth_ovs, veth_ns, ns))
@@ -93,49 +95,49 @@ def configurar_headnode(config, usuario, contrasena, ip_destino):
         # Asignar tag de VLAN al veth del OVS
         vlan_tags[veth_ovs] = vlan_tag
 
-    # Crear y configurar veth pairs
+    # Crear y configurar veth pairs con sudo
     for veth_ovs, veth_ns, ns in veth_pairs:
         ejecutar_comando_ssh(ssh_client, f'ip link add {veth_ovs} type veth peer name {veth_ns}',
-                             f"Creando el par veth {veth_ovs} y {veth_ns}...")
-        ejecutar_comando_ssh(ssh_client, f'ip link set {veth_ns} netns {ns}', f"Moviendo {veth_ns} al namespace {ns}...")
-        ejecutar_comando_ssh(ssh_client, f'ovs-vsctl add-port br-int {veth_ovs}', f"Añadiendo {veth_ovs} al OVS br-int...")
-        ejecutar_comando_ssh(ssh_client, f'ip link set {veth_ovs} up', f"Levantando {veth_ovs}...")
-        ejecutar_comando_ssh(ssh_client, f'ip netns exec {ns} ip link set dev {veth_ns} up', f"Levantando {veth_ns} en {ns}...")
+                             f"Creando el par veth {veth_ovs} y {veth_ns}...", contrasena)
+        ejecutar_comando_ssh(ssh_client, f'ip link set {veth_ns} netns {ns}', f"Moviendo {veth_ns} al namespace {ns}...", contrasena)
+        ejecutar_comando_ssh(ssh_client, f'ovs-vsctl add-port br-int {veth_ovs}', f"Añadiendo {veth_ovs} al OVS br-int...", contrasena)
+        ejecutar_comando_ssh(ssh_client, f'ip link set {veth_ovs} up', f"Levantando {veth_ovs}...", contrasena)
+        ejecutar_comando_ssh(ssh_client, f'ip netns exec {ns} ip link set dev {veth_ns} up', f"Levantando {veth_ns} en {ns}...", contrasena)
 
-    # Crear subinterfaces en br-int y asignar VLANs
+    # Crear subinterfaces en br-int y asignar VLANs con sudo
     for subinterface, vlan in subinterfaces.items():
         ejecutar_comando_ssh(ssh_client, f'ip link add link br-int name {subinterface} type vlan id {vlan}',
-                             f"Creando subinterface {subinterface} con VLAN {vlan}...")
-        ejecutar_comando_ssh(ssh_client, f'ip link set dev {subinterface} up', f"Levantando la subinterface {subinterface}...")
+                             f"Creando subinterface {subinterface} con VLAN {vlan}...", contrasena)
+        ejecutar_comando_ssh(ssh_client, f'ip link set dev {subinterface} up', f"Levantando la subinterface {subinterface}...", contrasena)
 
-    # Asignar IPs a las subinterfaces para que actúen como gateways
+    # Asignar IPs a las subinterfaces para que actúen como gateways con sudo
     for subinterface, ip in gateway_ips.items():
-        ejecutar_comando_ssh(ssh_client, f'ip address add {ip} dev {subinterface}', f"Asignando IP {ip} a {subinterface}...")
+        ejecutar_comando_ssh(ssh_client, f'ip address add {ip} dev {subinterface}', f"Asignando IP {ip} a {subinterface}...", contrasena)
 
-    # Asignar IPs a las interfaces veth del namespace
+    # Asignar IPs a las interfaces veth del namespace con sudo
     for ns, ip in veth_ips.items():
         ejecutar_comando_ssh(ssh_client, f'ip netns exec {ns} ip address add {ip} dev veth-ns{ns[-3:]}',
-                             f"Asignando IP {ip} a {ns}...")
+                             f"Asignando IP {ip} a {ns}...", contrasena)
 
-    # Ejecutar dnsmasq en cada namespace para proporcionar DHCP
+    # Ejecutar dnsmasq en cada namespace para proporcionar DHCP con sudo
     for ns, (iface, dhcp_range, gateway) in dnsmasq_configs.items():
         ejecutar_comando_ssh(ssh_client,
                              f'ip netns exec {ns} dnsmasq --interface={iface} --dhcp-range={dhcp_range},255.255.255.248 --dhcp-option=3,{gateway} --dhcp-option=6,8.8.8.8',
-                             f"Configurando dnsmasq en {ns}...")
+                             f"Configurando dnsmasq en {ns}...", contrasena)
 
-    # Asignar tag de VLAN a interfaces del peer veth del OVS
+    # Asignar tag de VLAN a interfaces del peer veth del OVS con sudo
     for veth_ovs, vlan in vlan_tags.items():
-        ejecutar_comando_ssh(ssh_client, f'ovs-vsctl set port {veth_ovs} tag={vlan}', f"Asignando tag VLAN {vlan} a {veth_ovs}...")
+        ejecutar_comando_ssh(ssh_client, f'ovs-vsctl set port {veth_ovs} tag={vlan}', f"Asignando tag VLAN {vlan} a {veth_ovs}...", contrasena)
 
-    # Definir la interfaz ens5 como troncal para que todas las VLANs puedan llevar y recoger tráfico
+    # Definir la interfaz ens5 como troncal para que todas las VLANs puedan llevar y recoger tráfico con sudo
     vlan_ids = ",".join([str(vlan) for vlan in vlans.keys()])
     ejecutar_comando_ssh(ssh_client, f'ovs-vsctl set port ens5 trunk={vlan_ids}',
-                         f"Configurando ens5 como troncal para las VLANs {vlan_ids}...")
+                         f"Configurando ens5 como troncal para las VLANs {vlan_ids}...", contrasena)
 
-    # Natear las redes definidas en el archivo JSON
+    # Natear las redes definidas en el archivo JSON con sudo
     for red in vlans.values():
         ejecutar_comando_ssh(ssh_client, f'iptables -t nat -I POSTROUTING -s {red} -o ens3 -j MASQUERADE',
-                             f"Aplicando regla NAT para {red}...")
+                             f"Aplicando regla NAT para {red}...", contrasena)
 
     print("Configuración completa en HeadNode")
 
