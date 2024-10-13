@@ -58,13 +58,18 @@ def get_ram_info(hostname, username, password):
 def get_cpu_cores_info(hostname, username, password):
     # Obtener número total de núcleos y núcleos disponibles (idle)
     total_cores = ssh_execute_command(hostname, username, password, "nproc --all")
-    available_cores = ssh_execute_command(hostname, username, password, "top -bn1 | grep 'Cpu(s)' | awk '{print $8}' | xargs")
+    available_cores = ssh_execute_command(hostname, username, password, "top -bn1 | grep 'Cpu(s)' | awk -F',' '{print $4}' | awk '{print $1}'")
 
-    cpu_info = {
-        'total_cores': total_cores,           # Total de núcleos del sistema
-        'idle_cores_percentage': available_cores  # Porcentaje de núcleos inactivos
-    }
+    try:
+        cpu_info = {
+            'total_cores': int(total_cores),           # Total de núcleos del sistema
+            'idle_cores_percentage': float(available_cores)  # Porcentaje de núcleos inactivos
+        }
+    except ValueError as e:
+        raise ValueError(f"Error al convertir valores de CPU: {str(e)}")
+
     return cpu_info
+
 
 
 def get_disk_usage(hostname, username, password):
