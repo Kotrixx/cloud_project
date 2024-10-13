@@ -37,7 +37,7 @@ def configurar_headnode(config, usuario, contrasena, ip_destino):
     # Establecer conexión SSH utilizando Paramiko en el puerto 5800
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(ip_destino, username=usuario, password=contrasena, port=5800)
+    ssh_client.connect(ip_destino, username=usuario, password=contrasena, port=22)
 
     # Actualizar el sistema
     ejecutar_comando_ssh(ssh_client, 'apt-get update', "Actualizando el sistema... (esto puede tardar, no detener el programa)")
