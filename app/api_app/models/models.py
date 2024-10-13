@@ -1,6 +1,5 @@
-from typing import Union, Dict, List, Optional
+from typing import Union, Dict, List
 from beanie import Document
-from bson import ObjectId
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -9,7 +8,6 @@ from datetime import datetime
 
 
 class Worker(Document):
-    id: Optional[ObjectId] = Field(alias="_id")
     name: str = Field(...)
     hostname: str = Field(...)
     ip: str = Field(...)
