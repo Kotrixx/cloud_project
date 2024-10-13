@@ -71,11 +71,11 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
             os.makedirs('/vm_images')
 
 
-        snapshot_img = f"/vm_images/{vm_name}_temp.qcow2"
+        snapshot_img = f"home/ubuntu/vm_images/{vm_name}_temp.qcow2"
 
 
         # Comando para crear una imagen basada en la imagen base
-        comandos.append((f"qemu-img create -f qcow2 -b {base_image} {snapshot_img} {disk}G", f"Creando imagen temporal para {vm_name} basada en {base_image}..."))
+        comandos.append((f"qemu-img create -f qcow2 -b {base_image} {snapshot_img} {disk}", f"Creando imagen temporal para {vm_name} basada en {base_image}..."))
 
         # Crear comando dinámico de QEMU según el flavor (distribución)
         comando_qemu = f"qemu-system-x86_64 -enable-kvm -vnc 0.0.0.0:{vm_name[-1]} -smp cores={cpu_cores} -m {ram} -drive file={snapshot_img},format=qcow2 "
