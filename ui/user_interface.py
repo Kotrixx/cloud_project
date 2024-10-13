@@ -1,5 +1,4 @@
 import subprocess
-import psutil
 import requests
 import json
 
@@ -161,9 +160,7 @@ def borrar_slice():
 
 
 def listar_consumo():
-    print(f"CPU: {psutil.cpu_percent()}%")
-    print(f"Memoria: {psutil.virtual_memory().percent}%")
-
+    print("asd")
 
 def importar_imagen():
     imagen_path = input("Ingrese la ruta de la imagen de la VM: ")
