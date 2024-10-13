@@ -3,34 +3,40 @@ import json
 
 
 # Función para ejecutar los comandos en el worker
-def ejecutar_comandos_worker(cliente, worker_config):
+def ejecutar_comandos_worker(cliente, worker_config, vlans):
     bridge = worker_config['bridge']
     vms = worker_config['vms']
 
     # Crear el bridge y levantarlo
     comandos = [
         (f"ovs-vsctl add-br {bridge}", f"Creando el bridge OVS {bridge}..."),
-        (f"ip link set dev {bridge} up", f"Levantando el bridge {bridge}...")
-    ]
+        (f"ip link set dev {bridge} up", f"Levantando el bridge {bridge}..."),
+        # Añadir ens4 como troncal para todas las VLANs
+        (f"ovs-vsctl add-port {bridge} ens4", f"Conectando ens4 al bridge {bridge}..."),
+        (f"ovs-vsctl set port ens4 trunk={','.join(vlans)}", f"Configurando ens4 como troncal para las VLANs {','.join(vlans)}...")
 
+    ]
+    
     # Procesar cada VM
     for vm_name, vm_config in vms.items():
         interfaces = vm_config['interfaces']
-
+        
         # Crear las interfaces TAP para cada VM y configurarlas
         for interfaz in interfaces:
             tap_name = interfaz['nombre']
             mac_address = interfaz['mac']
             vlan_tag = interfaz['vlan']
-
+            
             comandos += [
                 (f"ip tuntap add mode tap name {tap_name}", f"Creando interfaz {tap_name}..."),
                 (f"ip link set {tap_name} up", f"Levantando {tap_name}..."),
                 (f"ovs-vsctl add-port {bridge} {tap_name}", f"Conectando {tap_name} al bridge..."),
                 (f"ovs-vsctl set port {tap_name} tag={vlan_tag}", f"Asignando tag VLAN {vlan_tag} a {tap_name}..."),
                 (f"ip link set {tap_name} address {mac_address}", f"Asignando MAC {mac_address} a {tap_name}...")
+                (f"ovs-vsctl add-port {bridge} ens4", f"Conectando ens4 al bridge {bridge}..."),
+                (f"ovs-vsctl set port ens4 trunk={','.join(vlans)}", f"Configurando ens4 como troncal para las VLANs {','.join(vlans)}...")
             ]
-
+        
         # Crear comando dinámico de QEMU según el número de interfaces
         comando_qemu = f"qemu-system-x86_64 -enable-kvm -vnc 0.0.0.0:{vm_name[-1]} "  # Usa el número de VM para VNC
         for i, interfaz in enumerate(interfaces):
@@ -47,6 +53,35 @@ def ejecutar_comandos_worker(cliente, worker_config):
         ejecutar_comando_sudo(cliente, comando, descripcion)
 
 
+
+
+
+# Función para configurar iptables y permitir el tráfico entre subredes
+def configurar_iptables(cliente, vlan_networks):
+    comandos = []
+    
+    # Generar reglas de iptables para cada combinación de redes
+    for i, red_origen in enumerate(vlan_networks):
+        for red_destino in vlan_networks[i+1:]:
+            comandos += [
+                (f"iptables -A FORWARD -s {red_origen} -d {red_destino} -j ACCEPT", f"Permitido el tráfico de {red_origen} a {red_destino}..."),
+                (f"iptables -A FORWARD -s {red_destino} -d {red_origen} -j ACCEPT", f"Permitido el tráfico de {red_destino} a {red_origen}...")
+            ]
+
+    # Reglas generales de forward
+    comandos += [
+        ("iptables -A FORWARD -o ens3 -j ACCEPT", "Permitir tráfico de salida por ens3..."),
+        ("iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT", "Permitir tráfico ya establecido...")
+    ]
+
+    # Ejecutar comandos iptables
+    for comando, descripcion in comandos:
+        ejecutar_comando_sudo(cliente, comando, descripcion)
+
+
+
+
+
 # Función para conectarse al worker mediante SSH
 def conectar_worker(ip, usuario, contrasena):
     print(f"Conectando al worker {ip}...")
@@ -55,7 +90,6 @@ def conectar_worker(ip, usuario, contrasena):
     cliente.connect(ip, username=usuario, password=contrasena)
     print(f"Conexión establecida con el worker {ip}")
     return cliente
-
 
 # Función para ejecutar comandos con sudo y manejar la contraseña
 def ejecutar_comando_sudo(cliente, comando, descripcion=""):
@@ -70,30 +104,32 @@ def ejecutar_comando_sudo(cliente, comando, descripcion=""):
     if error:
         print(f"Error: {error}")
 
-
 # Cargar la configuración JSON
 def cargar_configuracion(json_file):
     with open(json_file, 'r') as f:
         config = json.load(f)
     return config
 
-
 # Función principal para procesar los workers y ejecutar los comandos en cada uno
 def procesar_workers(config, usuario, contrasena):
     workers = config['workers']
+    vlans = config['vlans'].keys()
+    vlan_networks = config['vlans'].values()  # Obtener las redes de las VLANs
 
+    
     for worker_name, worker_config in workers.items():
         ip = worker_config['ip']
         cliente = conectar_worker(ip, usuario, contrasena)
         ejecutar_comandos_worker(cliente, worker_config)
+        configurar_iptables(cliente, vlan_networks)
         cliente.close()
 
-
+# Configuración de la ruta del archivo JSON y credenciales SSH
 if __name__ == "__main__":
-    # Configuración de la ruta del archivo JSON y credenciales SSH
     json_file = "workers_config.json"
     usuario = "ubuntu"
     contrasena = "ubuntu"
+
     # Cargar la configuración y procesar los workers
     config = cargar_configuracion(json_file)
     procesar_workers(config, usuario, contrasena)
