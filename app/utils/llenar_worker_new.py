@@ -32,7 +32,7 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
                 (f"ip link set {tap_name} up", f"Levantando {tap_name}..."),
                 (f"ovs-vsctl add-port {bridge} {tap_name}", f"Conectando {tap_name} al bridge..."),
                 (f"ovs-vsctl set port {tap_name} tag={vlan_tag}", f"Asignando tag VLAN {vlan_tag} a {tap_name}..."),
-                (f"ip link set {tap_name} address {mac_address}", f"Asignando MAC {mac_address} a {tap_name}...")
+                (f"ip link set {tap_name} address {mac_address}", f"Asignando MAC {mac_address} a {tap_name}..."),
                 (f"ovs-vsctl add-port {bridge} ens4", f"Conectando ens4 al bridge {bridge}..."),
                 (f"ovs-vsctl set port ens4 trunk={','.join(vlans)}", f"Configurando ens4 como troncal para las VLANs {','.join(vlans)}...")
             ]
@@ -49,32 +49,6 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
         comandos.append((comando_qemu, f"Creando VM {vm_name} con {len(interfaces)} interfaces..."))
 
     # Ejecutar todos los comandos
-    for comando, descripcion in comandos:
-        ejecutar_comando_sudo(cliente, comando, descripcion)
-
-
-
-
-
-# Función para configurar iptables y permitir el tráfico entre subredes
-def configurar_iptables(cliente, vlan_networks):
-    comandos = []
-    
-    # Generar reglas de iptables para cada combinación de redes
-    for i, red_origen in enumerate(vlan_networks):
-        for red_destino in vlan_networks[i+1:]:
-            comandos += [
-                (f"iptables -A FORWARD -s {red_origen} -d {red_destino} -j ACCEPT", f"Permitido el tráfico de {red_origen} a {red_destino}..."),
-                (f"iptables -A FORWARD -s {red_destino} -d {red_origen} -j ACCEPT", f"Permitido el tráfico de {red_destino} a {red_origen}...")
-            ]
-
-    # Reglas generales de forward
-    comandos += [
-        ("iptables -A FORWARD -o ens3 -j ACCEPT", "Permitir tráfico de salida por ens3..."),
-        ("iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT", "Permitir tráfico ya establecido...")
-    ]
-
-    # Ejecutar comandos iptables
     for comando, descripcion in comandos:
         ejecutar_comando_sudo(cliente, comando, descripcion)
 
@@ -121,7 +95,6 @@ def procesar_workers(config, usuario, contrasena):
         ip = worker_config['ip']
         cliente = conectar_worker(ip, usuario, contrasena)
         ejecutar_comandos_worker(cliente, worker_config)
-        configurar_iptables(cliente, vlan_networks)
         cliente.close()
 
 # Configuración de la ruta del archivo JSON y credenciales SSH
