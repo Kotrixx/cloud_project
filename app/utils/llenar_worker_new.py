@@ -2,10 +2,6 @@ import paramiko
 import json
 import os
 
-
-
-
-
 # Función para ejecutar los comandos en el worker
 def ejecutar_comandos_worker(cliente, worker_config, vlans):
     bridge = worker_config['bridge']
@@ -61,17 +57,17 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
         
 
         if distribucion == "ubuntu":
-            base_image = "focal-server-cloudimg-amd64.img"
+            base_image = "/home/ubuntu/focal-server-cloudimg-amd64.img"
         elif distribucion == "cirros":
-            base_image = "cirros-0.6.2-x86_64-disk.img"
+            base_image = "/home/ubuntu/cirros-0.6.2-x86_64-disk.img"
 
 
         # Crear carpeta 'images' si no existe
-        if not os.path.exists('/vm_images'):
-            os.makedirs('/vm_images')
+        if not os.path.exists('/home/ubuntu/vm_images'):
+            os.makedirs('/home/ubuntu/vm_images')
 
 
-        snapshot_img = f"home/ubuntu/vm_images/{vm_name}_temp.qcow2"
+        snapshot_img = f"/home/ubuntu/vm_images/{vm_name}_temp.qcow2"
 
 
         # Comando para crear una imagen basada en la imagen base
