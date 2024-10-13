@@ -1,6 +1,6 @@
 import paramiko
 import json
-
+import os
 
 # Función para ejecutar los comandos en el worker
 def ejecutar_comandos_worker(cliente, worker_config, vlans):
@@ -57,15 +57,21 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
         
 
         if distribucion == "ubuntu":
-            base_image = "focal-server-cloudimg-amd64.img"
+            base_image = "/home/ubuntu/focal-server-cloudimg-amd64.img"
         elif distribucion == "cirros":
-            base_image = "cirros-0.6.2-x86_64-disk.img"
+            base_image = "/home/ubuntu/cirros-0.6.2-x86_64-disk.img"
 
-        snapshot_img = f"/var/lib/libvirt/images/{vm_name}_temp.qcow2"
+
+        # Crear carpeta 'images' si no existe
+        if not os.path.exists('/home/ubuntu/vm_images'):
+            os.makedirs('/home/ubuntu/vm_images')
+
+
+        snapshot_img = f"/home/ubuntu/vm_images/{vm_name}_temp.qcow2"
 
 
         # Comando para crear una imagen basada en la imagen base
-        comandos.append((f"qemu-img create -f qcow2 -b {base_image} {snapshot_img} {disk}G", f"Creando imagen temporal para {vm_name} basada en {base_image}..."))
+        comandos.append((f"qemu-img create -f qcow2 -b {base_image} {snapshot_img} {disk}", f"Creando imagen temporal para {vm_name} basada en {base_image}..."))
 
         # Crear comando dinámico de QEMU según el flavor (distribución)
         comando_qemu = f"qemu-system-x86_64 -enable-kvm -vnc 0.0.0.0:{vm_name[-1]} -smp cores={cpu_cores} -m {ram} -drive file={snapshot_img},format=qcow2 "
