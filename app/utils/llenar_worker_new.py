@@ -67,9 +67,11 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
 
 
         # Crear carpeta 'images' si no existe
-        if not os.path.exists('./images'):
-            os.makedirs('./images')
-        snapshot_img = f"/images/{vm_name}_temp.qcow2"
+        if not os.path.exists('/vm_images'):
+            os.makedirs('/vm_images')
+
+
+        snapshot_img = f"/vm_images/{vm_name}_temp.qcow2"
 
 
         # Comando para crear una imagen basada en la imagen base
