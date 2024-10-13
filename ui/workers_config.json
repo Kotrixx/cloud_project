@@ -79,7 +79,7 @@
             "distribucion": "cirros",
             "cpu_cores": 1,
             "ram": "256MB",
-            "disk": "2GB"
+            "disk": "0.5GB"
           }
         },
         "vm5": {
@@ -145,7 +145,7 @@
             "distribucion": "cirros",
             "cpu_cores": 1,
             "ram": "256MB",
-            "disk": "2GB"
+            "disk": "0.5GB"
           }
         }
       }
