@@ -120,7 +120,7 @@ def procesar_workers(config, usuario, contrasena):
     for worker_name, worker_config in workers.items():
         ip = worker_config['ip']
         cliente = conectar_worker(ip, usuario, contrasena)
-        ejecutar_comandos_worker(cliente, worker_config)
+        ejecutar_comandos_worker(cliente, worker_config, vlans)
         configurar_iptables(cliente, vlan_networks)
         cliente.close()
 
