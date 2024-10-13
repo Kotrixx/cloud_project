@@ -133,7 +133,7 @@ async def configurar(request: Request):
 
         # Llamar a las funciones con los datos del JSON
         usuario = "ubuntu"
-        contrasena = "ubuntu"
+        contrasena = "kotrix123"
         configurar_headnode(json_data, usuario, contrasena, '10.20.12.238')
         procesar_workers(json_data, usuario, contrasena)
         return {"message": "Configuración completada con éxito"}
