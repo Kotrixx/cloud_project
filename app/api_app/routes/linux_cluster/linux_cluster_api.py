@@ -38,6 +38,17 @@ async def get_workers_usage():
     for worker in workers:
         print(f'Monitoreando el worker: {worker.hostname} ({worker.ip})')
 
+        """
+        username = 'ubuntu'  # Asignar el hostname como username (ajustar si es diferente)
+        ip = '10.20.12.238'  # Obtener la contraseña del worker
+        password = 'kotrix123'
+        # Obtener los datos de CPU, RAM, discos y núcleos
+        cpu_usage = get_cpu_usage(ip, username, password)
+        ram_usage_percentage = get_ram_usage(ip, username, password)
+        ram_info = get_ram_info(ip, username, password)
+        disk_usage = get_disk_usage(ip, username, password)
+        cpu_cores_info = get_cpu_cores_info(ip, username, password)
+        """
         username = worker.hostname  # Asignar el hostname como username (ajustar si es diferente)
         password = worker.password_hashed  # Obtener la contraseña del worker
 

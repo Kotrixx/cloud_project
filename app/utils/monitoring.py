@@ -24,7 +24,8 @@ def parse_disk_usage(output):
 def ssh_execute_command(hostname, username, password, command):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname, username=username, password=password)
+    ssh.connect(hostname, username=username, password=password, port=5800)
+    print(f"Conexión establecida con el worker {hostname}")
 
     stdin, stdout, stderr = ssh.exec_command(command)
     output = stdout.read().decode('utf-8').strip()
