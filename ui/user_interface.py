@@ -2,10 +2,6 @@ import subprocess
 import requests
 import json
 
-from app.utils.llenar_headnode_new import cargar_configuracion, configurar_headnode
-from app.utils.llenar_worker_new import procesar_workers
-
-
 def list_topologies_request():
     # URL de tu endpoint
     url = "http://localhost:8080/linux_cluster/topologies"
