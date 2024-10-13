@@ -1,11 +1,6 @@
 import subprocess
-import psutil
 import requests
 import json
-
-from app.utils.llenar_headnode_new import cargar_configuracion, configurar_headnode
-from app.utils.llenar_worker_new import procesar_workers
-
 
 def list_topologies_request():
     # URL de tu endpoint
@@ -68,7 +63,7 @@ def cargar_configuracion_json(nombre_archivo):
             json_data = json.load(file)
         print(json_data)
         # Hacer un request POST a la API con el contenido del archivo JSON
-        url = "http://localhost:8000/configurar"  # Cambia a la URL correcta de tu API
+        url = "http://localhost:8080/linux_cluster/configurar"  # Cambia a la URL correcta de tu API
         response = requests.post(url, json=json_data)
 
         # Verificar si la solicitud fue exitosa
@@ -161,9 +156,7 @@ def borrar_slice():
 
 
 def listar_consumo():
-    print(f"CPU: {psutil.cpu_percent()}%")
-    print(f"Memoria: {psutil.virtual_memory().percent}%")
-
+    print("asd")
 
 def importar_imagen():
     imagen_path = input("Ingrese la ruta de la imagen de la VM: ")
