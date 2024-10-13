@@ -1,5 +1,9 @@
 import paramiko
 import json
+import os
+
+
+
 
 
 # Función para ejecutar los comandos en el worker
@@ -61,7 +65,11 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
         elif distribucion == "cirros":
             base_image = "cirros-0.6.2-x86_64-disk.img"
 
-        snapshot_img = f"/var/lib/libvirt/images/{vm_name}_temp.qcow2"
+
+        # Crear carpeta 'images' si no existe
+        if not os.path.exists('./images'):
+            os.makedirs('./images')
+        snapshot_img = f"/images/{vm_name}_temp.qcow2"
 
 
         # Comando para crear una imagen basada en la imagen base
