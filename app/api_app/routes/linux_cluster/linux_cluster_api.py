@@ -14,7 +14,7 @@ from app.utils.limpiar_worker import limpiar_worker
 from app.utils.llenar_headnode_paramiko import configurar_headnode
 from app.utils.llenar_worker import configurar_worker
 from app.utils.llenar_worker_new import procesar_workers
-from app.utils.monitoring import get_cpu_usage, get_ram_usage, get_disk_usage
+from app.utils.monitoring import get_cpu_usage, get_ram_usage, get_disk_usage, get_ram_info, get_cpu_cores_info
 
 
 @router.get("/workers")
@@ -32,28 +32,42 @@ async def get_topologies():
 
 @router.get("/workers/usage/now")
 async def get_workers_usage():
-    workers = await Worker.all().to_list()
-    print(workers)
-    usage_list = []
+    workers = await Worker.all().to_list()  # Obtener todos los trabajadores desde la base de datos
+    usage_list = []  # Lista para almacenar los datos de uso por cada worker
+
     for worker in workers:
-        print(worker)
         print(f'Monitoreando el worker: {worker.hostname} ({worker.ip})')
 
-        username = worker.hostname
-        password = worker.password_hashed
+        username = worker.hostname  # Asignar el hostname como username (ajustar si es diferente)
+        password = worker.password_hashed  # Obtener la contraseña del worker
 
+        # Obtener los datos de CPU, RAM, discos y núcleos
         cpu_usage = get_cpu_usage(worker.ip, username, password)
-        ram_usage = get_ram_usage(worker.ip, username, password)
+        ram_usage_percentage = get_ram_usage(worker.ip, username, password)
+        ram_info = get_ram_info(worker.ip, username, password)
         disk_usage = get_disk_usage(worker.ip, username, password)
-        usage = WorkerUsageOutput(
-            worker_id=str(worker.id),
-            cpu_usage=float(cpu_usage),
-            ram_usage=float(ram_usage),
-            disk_usage=disk_usage,  # Lista de diccionarios de la función parse_disk_usage
-            timestamp=datetime.utcnow().isoformat()
-        )
-        usage_list.append(usage)
-    return {usage: usage for usage in usage_list}
+        cpu_cores_info = get_cpu_cores_info(worker.ip, username, password)
+
+        # Estructurar los datos obtenidos para este worker
+        worker_usage_data = {
+            'worker_id': str(worker.id),
+            'hostname': worker.hostname,
+            'ip': worker.ip,
+            'cpu_usage': float(cpu_usage),
+            'ram_usage_percentage': float(ram_usage_percentage),
+            'ram_total_gb': ram_info['total_gb'],
+            'ram_available_gb': ram_info['available_gb'],
+            'total_cores': cpu_cores_info['total_cores'],
+            'idle_cores_percentage': float(cpu_cores_info['idle_cores_percentage']),
+            'disk_usage': disk_usage,  # Lista de diccionarios con información del disco
+            'timestamp': datetime.utcnow().isoformat()
+        }
+
+        # Añadir los datos del worker a la lista de uso
+        usage_list.append(worker_usage_data)
+
+    # Devolver la lista de uso de workers
+    return usage_list
 
 
 @router.post("/monitoring")
