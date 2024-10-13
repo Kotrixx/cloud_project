@@ -1,7 +1,26 @@
 # utils/monitoring.py
 import paramiko
 
-from monitoring.logger import parse_disk_usage
+
+def parse_disk_usage(output):
+    """
+    Convierte la salida de df -h en una lista de diccionarios con detalles de cada volumen de disco.
+    """
+    lines = output.strip().split("\n")
+    disk_info = []
+
+    for line in lines:
+        parts = line.split()
+        if len(parts) == 4:  # Aseguramos que la línea tenga todos los campos
+            volume_info = {
+                'volume': parts[0],        # El nombre del dispositivo
+                'size': parts[1],          # Tamaño total
+                'used': parts[2],          # Espacio utilizado
+                'available': parts[3],     # Espacio disponible
+            }
+            disk_info.append(volume_info)
+
+    return disk_info
 
 
 def ssh_execute_command(hostname, username, password, command):
