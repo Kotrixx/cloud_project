@@ -152,11 +152,46 @@ def listar_slices():
 def borrar_slice():
     slice_name = input("Ingrese el nombre del slice a borrar: ")
     print(f"Borrando slice {slice_name}...")
-    # subprocess.run(['virsh', 'destroy', slice_name])
+    url = "http://localhost:8080/linux_cluster/limpiar_topologia"  # URL del endpoint
+    headers = {'Content-Type': 'application/json'}
+
+    try:
+        # Realizar el request POST al endpoint
+        response = requests.post(url, headers=headers)
+
+        # Verificar el estado de la respuesta
+        if response.status_code == 200:
+            print(f"Slice {slice_name} borrado y topología limpiada con éxito.")
+        else:
+            print(f"Error al limpiar la topología: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Error al realizar la solicitud: {str(e)}")
 
 
 def listar_consumo():
-    print("asd")
+    # URL del endpoint que deseas consumir
+    url = "http://localhost:8080/linux_cluster/workers/usage/now"
+    try:
+        # Realizar la solicitud GET a la API
+        response = requests.get(url)
+
+        # Verificar si la solicitud fue exitosa
+        if response.status_code == 200:
+            # Obtener la respuesta en formato JSON
+            usage_data = response.json()
+
+            # Imprimir los datos de uso obtenidos
+            for usage in usage_data:
+                print(f"Worker ID: {usage['worker_id']}")
+                print(f"CPU Usage: {usage['cpu_usage']}%")
+                print(f"RAM Usage: {usage['ram_usage']}%")
+                print(f"Disk Usage: {usage['disk_usage']}")
+                print(f"Timestamp: {usage['timestamp']}")
+                print("-" * 40)
+        else:
+            print(f"Error: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Error al consumir la API: {str(e)}")
 
 def importar_imagen():
     imagen_path = input("Ingrese la ruta de la imagen de la VM: ")

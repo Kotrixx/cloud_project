@@ -1,6 +1,8 @@
 # utils/monitoring.py
 import paramiko
 
+from monitoring.logger import parse_disk_usage
+
 
 def ssh_execute_command(hostname, username, password, command):
     ssh = paramiko.SSHClient()
@@ -23,4 +25,5 @@ def get_ram_usage(hostname, username, password):
 
 
 def get_disk_usage(hostname, username, password):
-    return ssh_execute_command(hostname, username, password, "df -h --output=source,size,used,avail | grep '^/dev'")
+    output = ssh_execute_command(hostname, username, password, "df -h --output=source,size,used,avail | grep '^/dev'")
+    return parse_disk_usage(output)
