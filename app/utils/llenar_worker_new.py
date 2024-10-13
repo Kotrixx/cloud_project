@@ -22,6 +22,18 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
     for vm_name, vm_config in vms.items():
         interfaces = vm_config['interfaces']
         flavors = vm_config['flavor']  # Obtener la configuración del flavor
+        flavor = vm_config['flavor']  # Obtener el flavor de la VM actual
+
+
+
+        # Extraer los valores del flavor
+        distribucion = flavor['distribucion']
+        cpu_cores = flavor['cpu_cores']
+        ram = flavor['ram']
+        disk = flavor['disk']
+
+
+
 
 
         # Crear las interfaces TAP para cada VM y configurarlas
@@ -42,34 +54,31 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
             ]
 
 
-        # Crear imagen temporal para cada VM
-        for flavor in flavors:
-            distribucion = flavor['distribucion']
-            cpu_cores = flavor['cpu_cores']
-            ram = flavor['ram']
-            disk = flavor['disk']
-            snapshot_img = f"/var/lib/libvirt/images/{vm_name}_temp.qcow2"
+        
 
-            if distribucion == "ubuntu":
-                base_image = "focal-server-cloudimg-amd64.img"
-            elif distribucion == "cirros":
-                base_image = "cirros-0.6.2-x86_64-disk.img"
+        if distribucion == "ubuntu":
+            base_image = "focal-server-cloudimg-amd64.img"
+        elif distribucion == "cirros":
+            base_image = "cirros-0.6.2-x86_64-disk.img"
 
-            # Comando para crear una imagen basada en la imagen base
-            comandos.append((f"qemu-img create -f qcow2 -b {base_image} {snapshot_img} {disk}G", f"Creando imagen temporal para {vm_name} basada en {base_image}..."))
+        snapshot_img = f"/var/lib/libvirt/images/{vm_name}_temp.qcow2"
 
-            # Crear comando dinámico de QEMU según el flavor (distribución)
-            comando_qemu = f"qemu-system-x86_64 -enable-kvm -vnc 0.0.0.0:{vm_name[-1]} -smp cores={cpu_cores} -m {ram} -drive file={snapshot_img},format=qcow2 "
+
+        # Comando para crear una imagen basada en la imagen base
+        comandos.append((f"qemu-img create -f qcow2 -b {base_image} {snapshot_img} {disk}G", f"Creando imagen temporal para {vm_name} basada en {base_image}..."))
+
+        # Crear comando dinámico de QEMU según el flavor (distribución)
+        comando_qemu = f"qemu-system-x86_64 -enable-kvm -vnc 0.0.0.0:{vm_name[-1]} -smp cores={cpu_cores} -m {ram} -drive file={snapshot_img},format=qcow2 "
 
             # Añadir interfaces de red a QEMU
-            for i, interfaz in enumerate(interfaces):
-                tap_name = interfaz['nombre']
-                mac_address = interfaz['mac']
-                comando_qemu += f"-netdev tap,id={tap_name},ifname={tap_name},script=no,downscript=no -device e1000,netdev={tap_name},mac={mac_address} "
+        for i, interfaz in enumerate(interfaces):
+            tap_name = interfaz['nombre']
+            mac_address = interfaz['mac']
+            comando_qemu += f"-netdev tap,id={tap_name},ifname={tap_name},script=no,downscript=no -device e1000,netdev={tap_name},mac={mac_address} "
 
-            # Completar el comando QEMU
-            comando_qemu += "-daemonize -cpu host"
-            comandos.append((comando_qemu, f"Creando VM {vm_name} con {len(interfaces)} interfaces y distribución {distribucion}..."))
+        # Completar el comando QEMU
+        comando_qemu += "-daemonize -cpu host"
+        comandos.append((comando_qemu, f"Creando VM {vm_name} con {len(interfaces)} interfaces y distribución {distribucion}..."))
 
 
     # Ejecutar todos los comandos
