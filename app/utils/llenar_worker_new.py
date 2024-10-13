@@ -55,7 +55,6 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
         ejecutar_comando_sudo(cliente, comando, descripcion)
 
 
-
 # Función para conectarse al worker mediante SSH
 def conectar_worker(ip, usuario, contrasena):
     print(f"Conectando al worker {ip}...")

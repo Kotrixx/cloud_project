@@ -125,6 +125,23 @@ async def configurar(request: Request):
         raise HTTPException(status_code=400, detail=f"{error_message}\nTraceback: {error_traceback}")
 
 
+@router.post("/configurar_headnode")
+async def configurar(request: Request):
+    try:
+        # Leer el cuerpo del request y convertirlo a JSON
+        json_data = await request.json()
+
+        # Llamar a las funciones con los datos del JSON
+        usuario = "ubuntu"
+        contrasena = "ubuntu"
+        configurar_headnode(json_data)
+        return {"message": "Configuración completada con éxito"}
+    except Exception as e:
+        error_message = f"Error al procesar la solicitud: {str(e)}"
+        error_traceback = traceback.format_exc()  # Obtiene la traza completa del error
+        raise HTTPException(status_code=400, detail=f"{error_message}\nTraceback: {error_traceback}")
+
+
 """
 @router.get("/{device_id}")
 async def get_device(device_id: PydanticObjectId):

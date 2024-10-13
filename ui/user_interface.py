@@ -63,7 +63,7 @@ def cargar_configuracion_json(nombre_archivo):
             json_data = json.load(file)
         print(json_data)
         # Hacer un request POST a la API con el contenido del archivo JSON
-        url = "http://localhost:8080/linux_cluster/configurar"  # Cambia a la URL correcta de tu API
+        url = "http://localhost:8080/linux_cluster/configurar_headnode"  # Cambia a la URL correcta de tu API
         response = requests.post(url, json=json_data)
 
         # Verificar si la solicitud fue exitosa
