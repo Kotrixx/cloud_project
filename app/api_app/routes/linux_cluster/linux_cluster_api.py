@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime, timezone
 
 from beanie import PydanticObjectId
@@ -119,7 +120,9 @@ async def configurar(request: Request):
         procesar_workers(json_data, usuario, contrasena)
         return {"message": "Configuración completada con éxito"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al procesar la solicitud: {str(e)}")
+        error_message = f"Error al procesar la solicitud: {str(e)}"
+        error_traceback = traceback.format_exc()  # Obtiene la traza completa del error
+        raise HTTPException(status_code=400, detail=f"{error_message}\nTraceback: {error_traceback}")
 
 
 """
