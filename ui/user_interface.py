@@ -1,6 +1,11 @@
 import subprocess
 import psutil
 import requests
+import json
+
+from app.utils.llenar_headnode_new import cargar_configuracion, configurar_headnode
+from app.utils.llenar_worker_new import procesar_workers
+
 
 def list_topologies_request():
     # URL de tu endpoint
@@ -56,6 +61,30 @@ def list_topologies_request():
         print(f"Ha ocurrido un error: {str(e)}")
 
 
+def cargar_configuracion_json(nombre_archivo):
+    try:
+        # Leer el archivo JSON
+        with open(nombre_archivo, 'r') as file:
+            json_data = json.load(file)
+        print(json_data)
+        # Hacer un request POST a la API con el contenido del archivo JSON
+        url = "http://localhost:8000/configurar"  # Cambia a la URL correcta de tu API
+        response = requests.post(url, json=json_data)
+
+        # Verificar si la solicitud fue exitosa
+        if response.status_code == 200:
+            print("Slice creado correctamente a través de la API.")
+        else:
+            print(f"Error al crear el slice: {response.status_code}, {response.text}")
+
+    except FileNotFoundError:
+        print(f"El archivo {nombre_archivo} no fue encontrado.")
+    except json.JSONDecodeError:
+        print(f"Error al leer el archivo {nombre_archivo}. Asegúrese de que esté en formato JSON válido.")
+    except Exception as e:
+        print(f"Ha ocurrido un error: {str(e)}")
+
+
 def mostrar_menu():
     print("\n")
     print("Escoge una opción:")
@@ -70,22 +99,34 @@ def mostrar_menu():
 
 
 def crear_slice():
+    print("Seleccione una opción")
+    print("1. Cargar configuración con un archivo JSON")
+    print("2. Llenar valores desde cero")
     print("Selecciona la topología del slice:")
-    print("1. Lineal")
-    print("2. Malla")
-    print("3. Árbol")
-    print("4. Anillo")
-    print("5. Bus")
+    opcion = input("Ingrese la opción deseada: ")
 
-    topologia = input("Ingrese el número de la topología deseada: ")
+    if opcion == "1":
+        print("Creando slice con archivo JSON...")
+        nombre_archivo = input("Ingrese el nombre del archivo a cargar: ")
 
-    # Aquí procesas la opción seleccionada
-    if topologia == "1":
-        print("Creando slice con topología Lineal...")
-    elif topologia == "2":
-        print("Creando slice con topología Malla...")
-    # Agrega los demás casos para las demás topologías
-    # Añade lógica para crear el slice según la topología
+        # Llamar a la función que hará el request a la API con el archivo JSON
+        cargar_configuracion_json(nombre_archivo)
+
+    elif opcion == "2":
+        print("1. Lineal")
+        print("2. Malla")
+        print("3. Árbol")
+        print("4. Anillo")
+        print("5. Bus")
+        topologia = input("Ingrese el número de la topología deseada: ")
+
+        # Aquí procesas la opción seleccionada
+        if topologia == "1":
+            print("Creando slice con topología Lineal...")
+        elif topologia == "2":
+            print("Creando slice con topología Malla...")
+        # Agrega los demás casos para las demás topologías
+        # Añade lógica para crear el slice según la topología
 
 
 def editar_slice():
@@ -110,13 +151,13 @@ def listar_slices():
     # Llamar a la función para listar las topologías
     list_topologies_request()
     # También puedes listar las VMs en KVM como lo hacías antes
-    subprocess.run(['virsh', 'list', '--all'])
+    # subprocess.run(['virsh', 'list', '--all'])
 
 
 def borrar_slice():
     slice_name = input("Ingrese el nombre del slice a borrar: ")
     print(f"Borrando slice {slice_name}...")
-    subprocess.run(['virsh', 'destroy', slice_name])
+    # subprocess.run(['virsh', 'destroy', slice_name])
 
 
 def listar_consumo():
@@ -128,13 +169,13 @@ def importar_imagen():
     imagen_path = input("Ingrese la ruta de la imagen de la VM: ")
     print(f"Importando imagen desde {imagen_path}...")
     # Aquí añades la lógica para importar la imagen
-    subprocess.run(['virsh', 'define', imagen_path])
+    # subprocess.run(['virsh', 'define', imagen_path])
 
 
 def generar_credenciales():
     print("Generando credenciales de acceso...")
     # Aquí añades la lógica para generar credenciales SSH o tokens
-    subprocess.run(['ssh-keygen', '-t', 'rsa', '-b', '2048'])
+    # subprocess.run(['ssh-keygen', '-t', 'rsa', '-b', '2048'])
 
 
 def main():

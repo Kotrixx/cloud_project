@@ -1,14 +1,16 @@
 from datetime import datetime, timezone
 
 from beanie import PydanticObjectId
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from starlette import status
 
 from app.api_app.models.models import Worker, WorkerUsage, Topology
 from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput, RingTopologyInput, WorkerUsageOutput
 from app.api_app.routes.linux_cluster import router
 from app.utils.headnode_utils import create_ring_topology
+from app.utils.llenar_headnode_new import configurar_headnode
 from app.utils.llenar_worker import configurar_worker
+from app.utils.llenar_worker_new import procesar_workers
 
 
 @router.get("/workers")
@@ -102,6 +104,22 @@ def create_ring_topology_from_json(data: dict):
         vlan_tags=data['vlan_tags'],
         network_name=data['name']
     )
+
+
+@router.post("/configurar")
+async def configurar(request: Request):
+    try:
+        # Leer el cuerpo del request y convertirlo a JSON
+        json_data = await request.json()
+
+        # Llamar a las funciones con los datos del JSON
+        usuario = "ubuntu"
+        contrasena = "ubuntu"
+        configurar_headnode(json_data)
+        procesar_workers(json_data, usuario, contrasena)
+        return {"message": "Configuración completada con éxito"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al procesar la solicitud: {str(e)}")
 
 
 """
