@@ -155,7 +155,7 @@ def borrar_slice():
 
     # URL de los endpoints
     url_headnode = "http://localhost:8080/linux_cluster/limpiar_headnode"  # Endpoint para limpiar headnode
-    url_workers = "http://localhost:8080/linux_cluster/limpiar_workers"   # Endpoint para limpiar workers
+    url_workers = "http://localhost:8080/linux_cluster/limpiar_worker"   # Endpoint para limpiar workers
     headers = {'Content-Type': 'application/json'}
 
     try:
