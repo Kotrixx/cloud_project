@@ -46,3 +46,7 @@ class RingTopologyInput(BaseModel):
     veth_pairs: list
     namespaces: list
     creation_timestamp: str
+
+
+class WorkerRequest(BaseModel):
+    worker: int

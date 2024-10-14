@@ -6,7 +6,8 @@ from fastapi import FastAPI, HTTPException, Request
 from starlette import status
 
 from app.api_app.models.models import Worker, WorkerUsage, Topology
-from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput, RingTopologyInput, WorkerUsageOutput
+from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput, RingTopologyInput, WorkerUsageOutput, \
+    WorkerRequest
 from app.api_app.routes.linux_cluster import router
 from app.utils.headnode_utils import create_ring_topology
 from app.utils.limpiar_headnode1 import conectar_ssh, limpiar_headnode
@@ -212,16 +213,23 @@ async def limpiar_topo():
 
 
 @router.post("/limpiar_worker")
-async def limpiar_topo():
+async def limpiar_topo(request: WorkerRequest):
     try:
-        limpiar_worker(1)
-        limpiar_worker(2)
-        limpiar_worker(3)
-        return {"message": "Configuración completada con éxito"}
+        worker_id = request.worker
+
+        # Verificar que el worker sea válido
+        if worker_id not in [1, 2, 3]:
+            raise HTTPException(status_code=400, detail=f"Worker {worker_id} no válido. Debe ser 1, 2 o 3.")
+
+        # Llamar a la función de limpieza del worker específico
+        limpiar_worker(worker_id)
+
+        return {"message": f"Configuración del Worker {worker_id} completada con éxito"}
     except Exception as e:
         error_message = f"Error al procesar la solicitud: {str(e)}"
-        error_traceback = traceback.format_exc()  # Obtiene la traza completa del error
+        error_traceback = traceback.format_exc()  # Obtener la traza completa del error
         raise HTTPException(status_code=400, detail=f"{error_message}\nTraceback: {error_traceback}")
+
 
 
 """
