@@ -170,7 +170,7 @@ def borrar_slice():
             print(f"Error al limpiar el headnode: {response_headnode.status_code} - {response_headnode.text}")
 
         # Limpiar los 3 workers enviando el número del worker en el cuerpo de la solicitud
-        for worker_id in [1]:
+        for worker_id in [1, 2, 3]:
             print(f"Limpiando worker {worker_id}...")
             payload = {'worker': worker_id}  # Cuerpo de la solicitud con el número del worker
             response_worker = requests.post(url_worker, json=payload, headers=headers)

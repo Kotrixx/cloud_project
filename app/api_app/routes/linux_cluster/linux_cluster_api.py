@@ -222,7 +222,7 @@ async def limpiar_topo(request: WorkerRequest):
             raise HTTPException(status_code=400, detail=f"Worker {worker_id} no válido. Debe ser 1, 2 o 3.")
 
         # Llamar a la función de limpieza del worker específico
-        limpiar_worker(worker_id)
+        limpiar_worker.delay(worker_id)
 
         return {"message": f"Configuración del Worker {worker_id} completada con éxito"}
     except Exception as e:
