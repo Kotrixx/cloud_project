@@ -149,6 +149,37 @@ def listar_slices():
     # subprocess.run(['virsh', 'list', '--all'])
 
 
+def borrar_slice2():
+    slice_name = input("Ingrese el nombre del slice a borrar: ")
+    print(f"Borrando slice {slice_name}...")
+
+    try:
+        print("Ejecutando el script limpiar.py para el headnode...")
+        result_headnode = subprocess.run(
+            ['python3', 'limpiar.py', 'headnode'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        if result_headnode.returncode == 0:
+            print(f"Headnode limpiado con éxito. Output:\n{result_headnode.stdout}")
+        else:
+            print(f"Error al limpiar el headnode. Error:\n{result_headnode.stderr}")
+
+        subprocess.run(
+            ['python3', '../app/utils/limpiar_worker.py'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        print(f"Slice {slice_name} borrado y topología limpiada con éxito.")
+
+    except Exception as e:
+        print(f"Error al ejecutar el script: {str(e)}")
+
+
 def borrar_slice():
     slice_name = input("Ingrese el nombre del slice a borrar: ")
     print(f"Borrando slice {slice_name}...")
@@ -243,7 +274,7 @@ def main():
         elif opcion == "3":
             listar_slices()  # Aquí se llama la función para listar slices y topologías
         elif opcion == "4":
-            borrar_slice()
+            borrar_slice2()
         elif opcion == "5":
             listar_consumo()
         elif opcion == "6":

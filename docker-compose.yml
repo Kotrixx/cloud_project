@@ -1,27 +1,6 @@
 version: '3'
 services:
 
-  redis:
-    container_name: redis_database
-    image: redis:6-alpine
-    ports:
-      - "127.0.0.1:6379:6379"
-
-  celery_worker:
-    container_name: worker_support
-    build:
-      context: .
-      dockerfile: DockerfileWorker
-    command: celery -A app.worker.task worker --concurrency=20 --loglevel=info -E
-    restart: always
-    volumes:
-      - .:/app
-    environment:
-      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
-      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
-    depends_on:
-      - redis
-
   monitoring_app:
     build:
       context: .
