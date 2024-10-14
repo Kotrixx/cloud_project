@@ -184,8 +184,13 @@ def listar_consumo():
             for usage in usage_data:
                 print(f"Worker ID: {usage['worker_id']}")
                 print(f"CPU Usage: {usage['cpu_usage']}%")
-                print(f"RAM Usage: {usage['ram_usage']}%")
-                print(f"Disk Usage: {usage['disk_usage']}")
+                print(f"RAM Usage: {usage['ram_usage_percentage']}%")
+                print("Disk Usage:")
+                for disk in usage['disk_usage']:
+                    print(f"  Volume: {disk['volume']}")
+                    print(f"  Size: {disk['size']}")
+                    print(f"  Used: {disk['used']}")
+                    print(f"  Available: {disk['available']}")
                 print(f"Timestamp: {usage['timestamp']}")
                 print("-" * 40)
         else:
