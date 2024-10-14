@@ -15,6 +15,7 @@ from app.utils.llenar_headnode_paramiko import configurar_headnode
 from app.utils.llenar_worker import configurar_worker
 from app.utils.llenar_worker_new import procesar_workers
 from app.utils.monitoring import get_cpu_usage, get_ram_usage, get_disk_usage, get_ram_info, get_cpu_cores_info
+from concurrent.futures import ThreadPoolExecutor
 
 
 @router.get("/workers")
@@ -192,25 +193,30 @@ async def configurar(request: Request):
 
 
 @router.post("/limpiar_topologia")
-async def limpiar_topo():
+def limpiar_topo():
     try:
-        # Leer el cuerpo del request y convertirlo a JSON
-
-        # Llamar a las funciones con los datos del JSON
+        # Definir credenciales y datos de conexión
         usuario = "ubuntu"
-        contrasena = 'ubuntu'
         contrasena2 = "kotrix123"
 
+        # Conectar por SSH al headnode
         ssh_client = conectar_ssh("10.0.10.2", usuario, contrasena2)
         limpiar_headnode(ssh_client, contrasena2)
         ssh_client.close()
-        limpiar_worker(1)
-        limpiar_worker(2)
-        limpiar_worker(3)
+
+        # Usar un pool de threads para limpiar los workers en paralelo
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            workers = [1, 2, 3]
+            futures = [executor.submit(limpiar_worker, worker) for worker in workers]
+
+            # Esperar a que todas las tareas terminen
+            for future in futures:
+                future.result()
+
         return {"message": "Configuración completada con éxito"}
     except Exception as e:
         error_message = f"Error al procesar la solicitud: {str(e)}"
-        error_traceback = traceback.format_exc()  # Obtiene la traza completa del error
+        error_traceback = traceback.format_exc()
         raise HTTPException(status_code=400, detail=f"{error_message}\nTraceback: {error_traceback}")
 
 
