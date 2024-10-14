@@ -170,12 +170,18 @@ def borrar_slice2():
         # Paso 1: Crear el virtualenv si no existe
         if not os.path.exists(venv_dir):
             print("Creando un nuevo virtualenv...")
-            subprocess.run(['sudo', sys.executable, '-m', 'venv', venv_dir], check=True)
+            subprocess.run(['sudo', sys.executable, '-m', 'venv', venv_dir],
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL,
+                           check=True)
             print(f"Virtualenv creado en {venv_dir}")
 
-        # Paso 2: Instalar paramiko en el virtualenv
+        # Paso 2: Instalar paramiko en el virtualenv sin mostrar salida
         print("Instalando paramiko en el virtualenv...")
-        subprocess.run(['sudo', f"{venv_dir}/bin/pip", 'install', 'paramiko'], check=True)
+        subprocess.run(['sudo', f"{venv_dir}/bin/pip", 'install', 'paramiko'],
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL,
+                       check=True)
         print("paramiko instalado con éxito.")
 
         # Paso 3: Ejecutar el script limpiar_worker.py en el entorno virtual
