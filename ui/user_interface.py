@@ -165,7 +165,8 @@ def borrar_slice2():
     try:
         # Ruta al directorio de virtualenv y el script
         venv_dir = '../app/venv'
-        script_path = '../app/utils/limpiar_worker.py'
+        script_headnode = '../app/utils/limpiar_headnode1.py'  # Cambiar a limpiar_headnode1.py
+        script_worker = '../app/utils/limpiar_worker.py'
 
         # Paso 1: Crear el virtualenv si no existe, sin mostrar salida
         if not os.path.exists(venv_dir):
@@ -180,9 +181,9 @@ def borrar_slice2():
                        stderr=subprocess.DEVNULL,
                        check=True)
 
-        # Paso 3: Ejecutar el script limpiar_worker.py en el entorno virtual sin mensajes
+        # Paso 3: Ejecutar el script limpiar_headnode1.py en el entorno virtual sin mensajes
         result_headnode = subprocess.run(
-            ['sudo', f"{venv_dir}/bin/python", script_path, 'headnode'],
+            ['sudo', f"{venv_dir}/bin/python", script_headnode, 'headnode'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
@@ -193,9 +194,9 @@ def borrar_slice2():
         else:
             print(f"Error al limpiar el headnode. Error:\n{result_headnode.stderr}")
 
-        # Ejecutar el script sin argumentos para los workers
+        # Ejecutar el script limpiar_worker.py para los workers
         subprocess.run(
-            ['sudo', f"{venv_dir}/bin/python", script_path],
+            ['sudo', f"{venv_dir}/bin/python", script_worker],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
@@ -210,7 +211,6 @@ def borrar_slice2():
 def borrar_slice():
     url_headnode = "http://localhost:8080/linux_cluster/limpiar_headnode"  # Endpoint para limpiar headnode
     headers = {'Content-Type': 'application/json'}
-
     try:
         # Realizar el request POST al endpoint de limpiar_headnode
         print("Limpiando headnode...")

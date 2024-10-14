@@ -194,11 +194,7 @@ async def configurar(request: Request):
 @router.post("/limpiar_headnode")
 async def limpiar_topo():
     try:
-        # Leer el cuerpo del request y convertirlo a JSON
-
-        # Llamar a las funciones con los datos del JSON
         usuario = "ubuntu"
-        contrasena = 'ubuntu'
         contrasena2 = "kotrix123"
 
         ssh_client = conectar_ssh("10.0.10.2", usuario, contrasena2)
