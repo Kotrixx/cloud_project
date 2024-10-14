@@ -156,7 +156,7 @@ def borrar_slice2():
     try:
         print("Ejecutando el script limpiar.py para el headnode...")
         result_headnode = subprocess.run(
-            ['python3', 'limpiar.py', 'headnode'],
+            ['python3', '../app/utils/limpiar_worker.py', 'headnode'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
