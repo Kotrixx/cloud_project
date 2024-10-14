@@ -119,11 +119,15 @@ def limpiar_headnode(ssh_client, contrasena):
 
 
 # Establecer conexión SSH utilizando Paramiko
-def conectar_ssh(ip_destino, usuario, contrasena):
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(ip_destino, username=usuario, password=contrasena, port=22)
-    return ssh_client
+def conectar_ssh(hostname, username, password, timeout=10):
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(hostname, username=username, password=password, timeout=timeout)
+        return ssh
+    except Exception as e:
+        print(f"Error al conectar a SSH: {str(e)}")
+        raise e
 
 
 if __name__ == "__main__":
