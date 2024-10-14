@@ -154,9 +154,25 @@ def borrar_slice2():
     print(f"Borrando slice {slice_name}...")
 
     try:
+        # Ruta al directorio de virtualenv y el script
+        venv_dir = '../app/venv'
+        script_path = '../app/utils/limpiar_worker.py'
+
+        # Paso 1: Crear el virtualenv si no existe
+        if not os.path.exists(venv_dir):
+            print("Creando un nuevo virtualenv...")
+            subprocess.run([sys.executable, '-m', 'venv', venv_dir], check=True)
+            print(f"Virtualenv creado en {venv_dir}")
+
+        # Paso 2: Instalar paramiko en el virtualenv
+        print("Instalando paramiko en el virtualenv...")
+        subprocess.run([f"{venv_dir}/bin/pip", 'install', 'paramiko'], check=True)
+        print("paramiko instalado con éxito.")
+
+        # Paso 3: Ejecutar el script limpiar_worker.py en el entorno virtual
         print("Ejecutando el script limpiar.py para el headnode...")
         result_headnode = subprocess.run(
-            ['python3', '../app/utils/limpiar_worker.py', 'headnode'],
+            [f"{venv_dir}/bin/python", script_path, 'headnode'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
@@ -167,8 +183,9 @@ def borrar_slice2():
         else:
             print(f"Error al limpiar el headnode. Error:\n{result_headnode.stderr}")
 
+        # Ejecutar el script sin argumentos para los workers
         subprocess.run(
-            ['python3', '../app/utils/limpiar_worker.py'],
+            [f"{venv_dir}/bin/python", script_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
