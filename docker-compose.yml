@@ -1,10 +1,9 @@
 version: '3'
 services:
-
   monitoring_app:
     build:
       context: .
-      dockerfile: Dockerfile_monitoring # Especificar la ruta del DockerfileWorker
+      dockerfile: Dockerfile_monitoring # Especificar la ruta del Dockerfile
     ports:
       - "5000:5000"
     command: python monitoring/logger.py  # Cambiar al archivo correcto dentro del contenedor
