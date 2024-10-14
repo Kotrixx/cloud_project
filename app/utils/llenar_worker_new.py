@@ -2,7 +2,6 @@ import paramiko
 import json
 import os
 
-# Función para ejecutar los comandos en el worker
 def ejecutar_comandos_worker(cliente, worker_config, vlans):
     bridge = worker_config['bridge']
     vms = worker_config['vms']
@@ -15,25 +14,18 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
         (f"ovs-vsctl add-port {bridge} ens4", f"Conectando ens4 al bridge {bridge}..."),
         (f"ovs-vsctl set port ens4 trunk={','.join(vlans)}",
          f"Configurando ens4 como troncal para las VLANs {','.join(vlans)}...")
-
     ]
 
     # Procesar cada VM
     for vm_name, vm_config in vms.items():
         interfaces = vm_config['interfaces']
-        flavors = vm_config['flavor']  # Obtener la configuración del flavor
         flavor = vm_config['flavor']  # Obtener el flavor de la VM actual
-
-
 
         # Extraer los valores del flavor
         distribucion = flavor['distribucion']
         cpu_cores = flavor['cpu_cores']
         ram = flavor['ram']
         disk = flavor['disk']
-
-
-
 
 
         # Crear las interfaces TAP para cada VM y configurarlas
@@ -47,50 +39,25 @@ def ejecutar_comandos_worker(cliente, worker_config, vlans):
                 (f"ip link set {tap_name} up", f"Levantando {tap_name}..."),
                 (f"ovs-vsctl add-port {bridge} {tap_name}", f"Conectando {tap_name} al bridge..."),
                 (f"ovs-vsctl set port {tap_name} tag={vlan_tag}", f"Asignando tag VLAN {vlan_tag} a {tap_name}..."),
-                (f"ip link set {tap_name} address {mac_address}", f"Asignando MAC {mac_address} a {tap_name}..."),
-                (f"ovs-vsctl add-port {bridge} ens4", f"Conectando ens4 al bridge {bridge}..."),
-                (f"ovs-vsctl set port ens4 trunk={','.join(vlans)}",
-                 f"Configurando ens4 como troncal para las VLANs {','.join(vlans)}...")
+                (f"ip link set {tap_name} address {mac_address}", f"Asignando MAC {mac_address} a {tap_name}...")
             ]
 
-
-        
-
-        if distribucion == "ubuntu":
-            base_image = "/home/ubuntu/focal-server-cloudimg-amd64.img"
-        elif distribucion == "cirros":
-            base_image = "/home/ubuntu/cirros-0.6.2-x86_64-disk.img"
-
-
-        # Crear carpeta 'images' si no existe
-        if not os.path.exists('/home/ubuntu/vm_images'):
-            os.makedirs('/home/ubuntu/vm_images')
-
-
-        snapshot_img = f"/home/ubuntu/vm_images/{vm_name}_temp.qcow2"
-
-
-        # Comando para crear una imagen basada en la imagen base
-        comandos.append((f"qemu-img create -f qcow2 -b {base_image} {snapshot_img} {disk}", f"Creando imagen temporal para {vm_name} basada en {base_image}..."))
-
         # Crear comando dinámico de QEMU según el flavor (distribución)
-        comando_qemu = f"qemu-system-x86_64 -enable-kvm -vnc 0.0.0.0:{vm_name[-1]} -smp cores={cpu_cores} -m {ram} -drive file={snapshot_img},format=qcow2 "
+        comando_qemu = f"qemu-system-x86_64 -enable-kvm -vnc 0.0.0.0:{vm_name[-1]} "
 
-            # Añadir interfaces de red a QEMU
+        # Añadir las interfaces de red a QEMU
         for i, interfaz in enumerate(interfaces):
             tap_name = interfaz['nombre']
             mac_address = interfaz['mac']
             comando_qemu += f"-netdev tap,id={tap_name},ifname={tap_name},script=no,downscript=no -device e1000,netdev={tap_name},mac={mac_address} "
 
-        # Completar el comando QEMU
-        comando_qemu += "-daemonize -cpu host"
+        # Completar el comando QEMU con la imagen de la VM
+        comando_qemu += f"-daemonize -snapshot cirros-0.6.2-x86_64-disk.img -cpu host"
         comandos.append((comando_qemu, f"Creando VM {vm_name} con {len(interfaces)} interfaces y distribución {distribucion}..."))
-
 
     # Ejecutar todos los comandos
     for comando, descripcion in comandos:
         ejecutar_comando_sudo(cliente, comando, descripcion)
-
 
 
 
