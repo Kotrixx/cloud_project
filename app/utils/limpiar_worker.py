@@ -90,5 +90,7 @@ def limpiar_worker(worker):
 
 if __name__ == "__main__":
     # Main - Selección del Worker
-    worker_seleccionado = input("Selecciona el Worker a limpiar (1, 2 o 3): ")
-    limpiar_worker(worker_seleccionado)
+    # worker_seleccionado = input("Selecciona el Worker a limpiar (1, 2 o 3): ")
+    limpiar_worker(1)
+    limpiar_worker(2)
+    limpiar_worker(3)
