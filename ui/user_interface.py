@@ -5,6 +5,7 @@ import sys
 import requests
 import json
 
+
 def list_topologies_request():
     # URL de tu endpoint
     url = "http://localhost:8080/linux_cluster/topologies"
@@ -152,6 +153,11 @@ def listar_slices():
     # subprocess.run(['virsh', 'list', '--all'])
 
 
+import subprocess
+import os  # Asegúrate de importar este módulo
+import sys
+
+
 def borrar_slice2():
     slice_name = input("Ingrese el nombre del slice a borrar: ")
     print(f"Borrando slice {slice_name}...")
@@ -164,18 +170,18 @@ def borrar_slice2():
         # Paso 1: Crear el virtualenv si no existe
         if not os.path.exists(venv_dir):
             print("Creando un nuevo virtualenv...")
-            subprocess.run([sys.executable, '-m', 'venv', venv_dir], check=True)
+            subprocess.run(['sudo', sys.executable, '-m', 'venv', venv_dir], check=True)
             print(f"Virtualenv creado en {venv_dir}")
 
         # Paso 2: Instalar paramiko en el virtualenv
         print("Instalando paramiko en el virtualenv...")
-        subprocess.run([f"{venv_dir}/bin/pip", 'install', 'paramiko'], check=True)
+        subprocess.run(['sudo', f"{venv_dir}/bin/pip", 'install', 'paramiko'], check=True)
         print("paramiko instalado con éxito.")
 
         # Paso 3: Ejecutar el script limpiar_worker.py en el entorno virtual
         print("Ejecutando el script limpiar.py para el headnode...")
         result_headnode = subprocess.run(
-            [f"{venv_dir}/bin/python", script_path, 'headnode'],
+            ['sudo', f"{venv_dir}/bin/python", script_path, 'headnode'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
@@ -188,7 +194,7 @@ def borrar_slice2():
 
         # Ejecutar el script sin argumentos para los workers
         subprocess.run(
-            [f"{venv_dir}/bin/python", script_path],
+            ['sudo', f"{venv_dir}/bin/python", script_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
@@ -206,7 +212,7 @@ def borrar_slice():
 
     # URL de los endpoints
     url_headnode = "http://localhost:8080/linux_cluster/limpiar_headnode"  # Endpoint para limpiar headnode
-    url_workers = "http://localhost:8080/linux_cluster/limpiar_worker"   # Endpoint para limpiar workers
+    url_workers = "http://localhost:8080/linux_cluster/limpiar_worker"  # Endpoint para limpiar workers
     headers = {'Content-Type': 'application/json'}
 
     try:
@@ -266,6 +272,7 @@ def listar_consumo():
             print(f"Error: {response.status_code} - {response.text}")
     except Exception as e:
         print(f"Error al consumir la API: {str(e)}")
+
 
 def importar_imagen():
     imagen_path = input("Ingrese la ruta de la imagen de la VM: ")
