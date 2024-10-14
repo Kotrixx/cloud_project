@@ -208,10 +208,6 @@ def borrar_slice2():
 
 
 def borrar_slice():
-    slice_name = input("Ingrese el nombre del slice a borrar: ")
-    print(f"Borrando slice {slice_name}...")
-
-    # URL de los endpoints
     url_headnode = "http://localhost:8080/linux_cluster/limpiar_headnode"  # Endpoint para limpiar headnode
     headers = {'Content-Type': 'application/json'}
 
@@ -225,9 +221,6 @@ def borrar_slice():
             print(f"Headnode limpiado con éxito.")
         else:
             print(f"Error al limpiar el headnode: {response_headnode.status_code} - {response_headnode.text}")
-        # Mensaje final de éxito si ambas limpiezas fueron exitosas
-        if response_headnode.status_code == 200:
-            print(f"Slice {slice_name} borrado y topología limpiada con éxito.")
     except Exception as e:
         print(f"Error al realizar la solicitud: {str(e)}")
 
