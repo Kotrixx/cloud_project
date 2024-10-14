@@ -281,7 +281,6 @@ def main():
         elif opcion == "3":
             listar_slices()  # Aquí se llama la función para listar slices y topologías
         elif opcion == "4":
-            borrar_slice()
             borrar_slice2()
         elif opcion == "5":
             listar_consumo()
