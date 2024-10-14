@@ -152,18 +152,36 @@ def listar_slices():
 def borrar_slice():
     slice_name = input("Ingrese el nombre del slice a borrar: ")
     print(f"Borrando slice {slice_name}...")
-    url = "http://localhost:8080/linux_cluster/limpiar_topologia"  # URL del endpoint
+
+    # URL de los endpoints
+    url_headnode = "http://localhost:8080/linux_cluster/limpiar_headnode"  # Endpoint para limpiar headnode
+    url_workers = "http://localhost:8080/linux_cluster/limpiar_workers"   # Endpoint para limpiar workers
     headers = {'Content-Type': 'application/json'}
 
     try:
-        # Realizar el request POST al endpoint
-        response = requests.post(url, headers=headers)
+        # Realizar el request POST al endpoint de limpiar_headnode
+        print("Limpiando headnode...")
+        response_headnode = requests.post(url_headnode, headers=headers)
 
-        # Verificar el estado de la respuesta
-        if response.status_code == 200:
-            print(f"Slice {slice_name} borrado y topología limpiada con éxito.")
+        # Verificar el estado de la respuesta para headnode
+        if response_headnode.status_code == 200:
+            print(f"Headnode limpiado con éxito.")
         else:
-            print(f"Error al limpiar la topología: {response.status_code} - {response.text}")
+            print(f"Error al limpiar el headnode: {response_headnode.status_code} - {response_headnode.text}")
+
+        # Realizar el request POST al endpoint de limpiar_workers
+        print("Limpiando workers...")
+        response_workers = requests.post(url_workers, headers=headers)
+
+        # Verificar el estado de la respuesta para workers
+        if response_workers.status_code == 200:
+            print(f"Workers limpiados con éxito.")
+        else:
+            print(f"Error al limpiar los workers: {response_workers.status_code} - {response_workers.text}")
+
+        # Mensaje final de éxito si ambas limpiezas fueron exitosas
+        if response_headnode.status_code == 200 and response_workers.status_code == 200:
+            print(f"Slice {slice_name} borrado y topología limpiada con éxito.")
     except Exception as e:
         print(f"Error al realizar la solicitud: {str(e)}")
 
