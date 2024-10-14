@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import AsyncGenerator
 
-from app.api_app.middleware.logging_middleware import request_logger
-from app.api_app.models.database import init_db
-from app.api_app.routes.linux_cluster import linux_cluster_api as linux_cluster_routes
+from app.middleware.logging_middleware import request_logger
+from app.models.database import init_db
+from app.routes.linux_cluster import linux_cluster_api as linux_cluster_routes
 
 
 async def app_lifespan(app: FastAPI) -> AsyncGenerator:
@@ -35,7 +35,7 @@ api_app.add_middleware(
 
 
 def config():
-    # api_app.include_router(device_routes.router)
+    # app.include_router(device_routes.router)
     api_app.include_router(linux_cluster_routes.router)
 
 

@@ -1,5 +1,4 @@
-import subprocess
-from app.utils.general_utils import run_sudo_command
+from utils.general_utils import run_sudo_command
 
 HEADNODE_PHY_IFACE = 'ens5'
 

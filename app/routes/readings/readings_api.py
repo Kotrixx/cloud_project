@@ -2,9 +2,9 @@ from fastapi import HTTPException
 from starlette import status
 from starlette.requests import Request
 
-"""from app.api_app.models.models import DeviceData, Device, ReadingMetadata
-from app.api_app.routes.readings import router
-from app.api_app.utils.payload_utils import get_mapped_value, get_timestamp, extract_value
+"""from app.app.models.models import DeviceData, Device, ReadingMetadata
+from app.app.routes.readings import router
+from app.app.utils.payload_utils import get_mapped_value, get_timestamp, extract_value
 
 
 @router.post("/")

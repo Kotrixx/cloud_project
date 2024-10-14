@@ -1,7 +1,7 @@
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.api_app.models.models import Worker, WorkerUsage, Topology
+from app.models.models import Worker, WorkerUsage, Topology
 
 MONGO_URL = (f"mongodb+srv://aingetk_user:aingetk_user"
              f"@cluster0.ek0es.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")

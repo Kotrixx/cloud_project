@@ -4,9 +4,9 @@ from beanie import PydanticObjectId
 from fastapi import HTTPException
 from starlette import status
 
-"""from app.api_app.models.models import Device, DeviceData
-from app.api_app.models.schemas import DeviceCreationInput
-from app.api_app.routes.device import router
+"""from app.app.models.models import Device, DeviceData
+from app.app.models.schemas import DeviceCreationInput
+from app.app.routes.device import router
 
 
 @router.get("/")

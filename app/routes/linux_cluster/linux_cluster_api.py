@@ -1,21 +1,19 @@
 import traceback
 from datetime import datetime, timezone
 
-from beanie import PydanticObjectId
-from fastapi import FastAPI, HTTPException, Request
-from starlette import status
+from fastapi import HTTPException, Request
 
-from app.api_app.models.models import Worker, WorkerUsage, Topology
-from app.api_app.models.schemas import WorkerCreationInput, WorkerUsageInput, RingTopologyInput, WorkerUsageOutput, \
+from app.models.models import Worker, WorkerUsage, Topology
+from app.models.schemas import RingTopologyInput, WorkerUsageOutput, \
     WorkerRequest
-from app.api_app.routes.linux_cluster import router
-from app.utils.headnode_utils import create_ring_topology
-from app.utils.limpiar_headnode1 import conectar_ssh, limpiar_headnode
-from app.utils.limpiar_worker import limpiar_worker
-from app.utils.llenar_headnode_paramiko import configurar_headnode
-from app.utils.llenar_worker import configurar_worker
-from app.utils.llenar_worker_new import procesar_workers
-from app.utils.monitoring import get_cpu_usage, get_ram_usage, get_disk_usage, get_ram_info, get_cpu_cores_info
+from app.routes.linux_cluster import router
+from utils.headnode_utils import create_ring_topology
+from utils.limpiar_headnode1 import conectar_ssh, limpiar_headnode
+from utils.limpiar_worker import limpiar_worker
+from utils.llenar_headnode_paramiko import configurar_headnode
+from utils.llenar_worker import configurar_worker
+from utils.llenar_worker_new import procesar_workers
+from utils.monitoring import get_cpu_usage, get_ram_usage, get_disk_usage, get_ram_info, get_cpu_cores_info
 
 
 @router.get("/workers")

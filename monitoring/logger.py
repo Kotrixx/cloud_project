@@ -3,13 +3,10 @@ from datetime import datetime
 
 import httpx
 import paramiko
-import time
 
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.api_app.models.database import init_db
-from app.api_app.models.schemas import WorkerUsageOutput
+from app import WorkerUsageOutput
 
 
 # Función para ejecutar comandos SSH en un worker

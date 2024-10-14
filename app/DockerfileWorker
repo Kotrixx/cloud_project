@@ -2,11 +2,11 @@ FROM python:3.10
 
 WORKDIR /code
 
-COPY app/requirements.txt /code/requirements.txt
+COPY requirements.txt /code/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-COPY . /code/app
+COPY app /code/app
 
 ENV CELERY_BROKER_URL="redis://redis:6379/0"
 ENV CELERY_RESULT_BACKEND="redis://redis:6379/0"

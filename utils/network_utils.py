@@ -1,6 +1,6 @@
 import ipaddress
 
-from app.utils.general_utils import run_sudo_command
+from utils.general_utils import run_sudo_command
 
 
 class NetworkConfiguration:

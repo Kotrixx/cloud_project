@@ -11,7 +11,7 @@ services:
     container_name: worker_support
     build:
       context: .
-      dockerfile: DockerfileWorker
+      dockerfile: app/DockerfileWorker
     command: celery -A app.worker.task worker --concurrency=20 --loglevel=info -E
     restart: always
     volumes:
