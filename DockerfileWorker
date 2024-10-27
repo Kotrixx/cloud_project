@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.11
 
 WORKDIR /code
 
@@ -10,5 +10,6 @@ COPY . /code/app
 
 ENV CELERY_BROKER_URL="redis://redis:6379/0"
 ENV CELERY_RESULT_BACKEND="redis://redis:6379/0"
+ENV PYTHONPATH=/code
 
 CMD ["celery", "-A", "app.worker.task", "worker", "--concurrency=20", "--loglevel=info", "-E"]
