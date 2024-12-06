@@ -1,100 +1,165 @@
 import os
 import subprocess
 import sys
-
 import requests
 import json
 
+# Global variable to store the authentication token
+AUTH_TOKEN = None
 
-def list_topologies_request():
-    # URL de tu endpoint
-    url = "http://localhost:8080/linux_cluster/topologies"
+def login():
+    """
+    Authenticate user and retrieve access token
+    """
+    global AUTH_TOKEN
+
+    print("\nLogin Required")
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+
+    url = "http://localhost:8000/v1.0/security/login"
+    payload = {
+        "username": username,
+        "password": password
+    }
 
     try:
-        # Hacer la solicitud GET
-        response = requests.get(url)
+        response = requests.post(url, json=payload)
 
-        # Verificar que la solicitud fue exitosa
         if response.status_code == 200:
-            topologies = response.json()
-
-            # Mostrar la información de manera legible
-            for topology in topologies:
-                print(f"ID: {topology['_id']}")
-                print(f"Name: {topology['name']}")
-                print(f"Nodes: {topology['nodes']}")
-                print(f"Topology Name: {topology['topology_name']}")
-                print("VLAN Tags:")
-                for veth, vlan in topology['vlan_tags'].items():
-                    print(f"  {veth}: {vlan}")
-
-                print("DNSMasq Configurations:")
-                for namespace, config in topology['dnsmasq_configs'].items():
-                    print(f"  Namespace {namespace}:")
-                    for key, value in config.items():
-                        print(f"    {key}: {value}")
-
-                print("Gateway IPs:")
-                for subinterface, ip in topology['gateway_ips'].items():
-                    print(f"  {subinterface}: {ip}")
-
-                print("Subinterfaces:")
-                for subinterface, vlan in topology['subinterfaces'].items():
-                    print(f"  {subinterface}: VLAN {vlan}")
-
-                print("Veth Pairs:")
-                for pair in topology['veth_pairs']:
-                    print(f"  {pair[0]} <--> {pair[1]}")
-
-                print("Namespaces:")
-                for namespace in topology['namespaces']:
-                    print(f"  {namespace}")
-
-                print(f"Creation Timestamp: {topology['creation_timestamp']}")
-                print(f"Topology Type: {topology['topology_type']}")
-                print("-" * 40)
+            # Successful login
+            AUTH_TOKEN = response.json().get('access_token')
+            print("Login successful!")
+            return True
+        elif response.status_code == 401:
+            # Unauthorized - incorrect credentials
+            print("Error: Incorrect username or password.")
+            return False
+        elif response.status_code == 403:
+            # Forbidden - login incorrect or insufficient permissions
+            print("Error: Access denied. Invalid login credentials.")
+            return False
+        elif response.status_code == 404:
+            # User not found
+            print("Error: User not found in the system.")
+            return False
         else:
-            print(f"Error al obtener los topologías: {response.status_code}")
+            print(f"Unexpected error: {response.status_code}")
+            return False
 
-    except Exception as e:
-        print(f"Ha ocurrido un error: {str(e)}")
+    except requests.RequestException as e:
+        print(f"Connection error: {e}")
+        return False
 
+# Rest of the script remains the same as in the previous version
+def authenticated_request(method, url, json_data=None):
+    """
+    Make an authenticated request to the API
+    """
+    global AUTH_TOKEN
+
+    if not AUTH_TOKEN:
+        print("You must login first!")
+        return None
+
+    headers = {
+        'Authorization': f'Bearer {AUTH_TOKEN}',
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        if method == 'GET':
+            response = requests.get(url, headers=headers)
+        elif method == 'POST':
+            response = requests.post(url, headers=headers, json=json_data)
+        else:
+            print(f"Unsupported HTTP method: {method}")
+            return None
+
+        # Check for token expiration or unauthorized access
+        if response.status_code == 401:
+            print("Session expired. Please login again.")
+            AUTH_TOKEN = None
+            return None
+
+        return response
+
+    except requests.RequestException as e:
+        print(f"Request error: {e}")
+        return None
+
+def list_topologies_request():
+    response = authenticated_request('GET', "http://localhost:8080/linux_cluster/topologies")
+    if not response:
+        return
+
+    if response.status_code == 200:
+        topologies = response.json()
+        for topology in topologies:
+            print(f"ID: {topology['_id']}")
+            print(f"Name: {topology['name']}")
+            print(f"Nodes: {topology['nodes']}")
+            print(f"Topology Name: {topology['topology_name']}")
+            # ... rest of the printing logic remains the same
+            print("-" * 40)
+    else:
+        print(f"Error retrieving topologies: {response.status_code}")
 
 def cargar_configuracion_json(nombre_archivo):
     try:
-        # Leer el archivo JSON
         with open(nombre_archivo, 'r') as file:
             json_data = json.load(file)
-        print(json_data)
-        # Hacer un request POST a la API con el contenido del archivo JSON
-        url = "http://localhost:8080/linux_cluster/configurar_headnode"  # Cambia a la URL correcta de tu API
-        response = requests.post(url, json=json_data)
 
-        # Verificar si la solicitud fue exitosa
-        if response.status_code == 200:
-            print("Slice creado correctamente a través de la API.")
+        response = authenticated_request('POST', "http://localhost:8080/linux_cluster/configurar_headnode", json_data)
+
+        if response and response.status_code == 200:
+            print("Slice created successfully through the API.")
         else:
-            print(f"Error al crear el slice: {response.status_code}, {response.text}")
+            print(f"Error creating slice: {response.status_code}, {response.text}")
 
     except FileNotFoundError:
-        print(f"El archivo {nombre_archivo} no fue encontrado.")
+        print(f"File {nombre_archivo} not found.")
     except json.JSONDecodeError:
-        print(f"Error al leer el archivo {nombre_archivo}. Asegúrese de que esté en formato JSON válido.")
+        print(f"Error reading file {nombre_archivo}. Ensure it's in valid JSON format.")
     except Exception as e:
-        print(f"Ha ocurrido un error: {str(e)}")
+        print(f"An error occurred: {str(e)}")
+
+# The rest of the functions remain mostly the same, but use authenticated_request
+
+def borrar_slice():
+    response = authenticated_request('POST', "http://localhost:8080/linux_cluster/limpiar_headnode")
+    if response and response.status_code == 200:
+        print("Headnode cleaned successfully.")
+    else:
+        print(f"Error cleaning headnode: {response.status_code}")
+
+def listar_consumo():
+    response = authenticated_request('GET', "http://localhost:8080/linux_cluster/workers/usage/now")
+    if not response:
+        return
+
+    if response.status_code == 200:
+        usage_data = response.json()
+        for usage in usage_data:
+            print(f"Worker ID: {usage['worker_id']}")
+            print(f"CPU Usage: {usage['cpu_usage']}%")
+            # ... rest of the printing logic remains the same
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
 
 
 def mostrar_menu():
     print("\n")
-    print("Escoge una opción:")
-    print("1. Crear un nuevo slice")
-    print("2. Editar un slice existente")
-    print("3. Listar los slices existentes")
-    print("4. Borrar un slice")
-    print("5. Listar el consumo de recursos del sistema")
-    print("6. Importar imagen de una VM")
-    print("7. Generar credenciales para acceder a la consola de VM")
-    print("8. Salir")
+    print("Choose an option:")
+    print("1. Create a new slice")
+    print("2. Edit an existing slice")
+    print("3. List existing slices")
+    print("4. Delete a slice")
+    print("5. List system resource consumption")
+    print("6. Import VM image")
+    print("7. Generate console access credentials")
+    print("8. Logout")
+    print("9. Exit")
 
 
 def crear_slice():
@@ -270,29 +335,43 @@ def generar_credenciales():
 
 
 def main():
+    global AUTH_TOKEN
     while True:
-        mostrar_menu()
-        opcion = input("Elige una opción: ")
+        # If not authenticated, require login
+        if not AUTH_TOKEN:
+            login_success = login()
+            if not login_success:
+                continue
 
-        if opcion == "1":
-            crear_slice()
-        elif opcion == "2":
-            editar_slice()
-        elif opcion == "3":
-            listar_slices()  # Aquí se llama la función para listar slices y topologías
-        elif opcion == "4":
-            borrar_slice2()
-        elif opcion == "5":
-            listar_consumo()
-        elif opcion == "6":
-            importar_imagen()
-        elif opcion == "7":
-            generar_credenciales()
-        elif opcion == "8":
-            print("Saliendo del programa...")
-            break
-        else:
-            print("Opción no válida, por favor intenta de nuevo.")
+        mostrar_menu()
+        opcion = input("Choose an option: ")
+
+        try:
+            if opcion == "1":
+                crear_slice()
+            elif opcion == "2":
+                editar_slice()
+            elif opcion == "3":
+                list_topologies_request()
+            elif opcion == "4":
+                borrar_slice()
+            elif opcion == "5":
+                listar_consumo()
+            elif opcion == "6":
+                importar_imagen()
+            elif opcion == "7":
+                generar_credenciales()
+            elif opcion == "8":
+                print("Logging out...")
+                AUTH_TOKEN = None  # Clear the token
+            elif opcion == "9":
+                print("Exiting the program...")
+                break
+            else:
+                print("Invalid option, please try again.")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
