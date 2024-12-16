@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile_monitoring # Especificar la ruta del Dockerfile
     ports:
-      - "5000:5000"
+      - "5123:5123"
     command: python monitoring/logger.py  # Cambiar al archivo correcto dentro del contenedor
     depends_on:
       - central_api
