@@ -3,7 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.api_app.models.models import Worker, WorkerUsage, Topology
 
-MONGO_URL = (f"mongodb+srv://aingetk_user:aingetk_user"
+MONGO_URL = (f"mongodb+srv://cloud_user:cloud_pass"
              f"@cluster0.ek0es.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
 
