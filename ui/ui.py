@@ -1,16 +1,21 @@
+import asyncio
 import os
 import subprocess
 import sys
 import requests
 import json
 
+from security_utils import login_function_call
+from schemas import LoginData
+from database import init_db
+
 # Global variable to store the authentication token
 AUTH_TOKEN = None
 
 
-def login():
+async def login():
     """
-    Authenticate user and retrieve access token
+    Authenticate user and retrieve access token.
     """
     global AUTH_TOKEN
 
@@ -18,38 +23,23 @@ def login():
     username = input("Enter username: ")
     password = input("Enter password: ")
 
-    url = "http://localhost:8000/v1.0/security/login"
-    payload = {
-        "username": username,
-        "password": password
-    }
+    # Crear instancia de LoginData con las credenciales ingresadas
+    dp = LoginData(username=username, password=password)
 
     try:
-        response = requests.post(url, json=payload)
+        # Llamar a la función de autenticación
+        response = await login_function_call(dp)
 
-        if response.status_code == 200:
-            # Successful login
-            AUTH_TOKEN = response.json().get('access_token')
+        if response:  # Si se retorna un diccionario con los datos
+            AUTH_TOKEN = response.get('access_token')
             print("Login successful!")
             return True
-        elif response.status_code == 401:
-            # Unauthorized - incorrect credentials
-            print("Error: Incorrect username or password.")
-            return False
-        elif response.status_code == 403:
-            # Forbidden - login incorrect or insufficient permissions
-            print("Error: Access denied. Invalid login credentials.")
-            return False
-        elif response.status_code == 404:
-            # User not found
-            print("Error: User not found in the system.")
-            return False
-        else:
-            print(f"Unexpected error: {response.status_code}")
+        else:  # Si la función retorna None
+            print("Error: Invalid username or password.")
             return False
 
-    except requests.RequestException as e:
-        print(f"Connection error: {e}")
+    except Exception as e:
+        print(f"Error during login: {e}")
         return False
 
 
@@ -340,45 +330,41 @@ def generar_credenciales():
     # subprocess.run(['ssh-keygen', '-t', 'rsa', '-b', '2048'])
 
 
-def main():
-    global AUTH_TOKEN
+async def main():
+    logged_in = False
+    while not logged_in:
+        logged_in = await login()  # Realiza el login antes de mostrar el menú
+
     while True:
-        # If not authenticated, require login
-        if not AUTH_TOKEN:
-            login_success = login()
-            if not login_success:
-                continue
-
         mostrar_menu()
-        opcion = input("Choose an option: ")
+        opcion = input("Seleccione una opción: ")
 
-        try:
-            if opcion == "1":
-                crear_slice()
-            elif opcion == "2":
-                editar_slice()
-            elif opcion == "3":
-                list_topologies_request()
-            elif opcion == "4":
-                borrar_slice()
-            elif opcion == "5":
-                listar_consumo()
-            elif opcion == "6":
-                importar_imagen()
-            elif opcion == "7":
-                generar_credenciales()
-            elif opcion == "8":
-                print("Logging out...")
-                AUTH_TOKEN = None  # Clear the token
-            elif opcion == "9":
-                print("Exiting the program...")
-                break
-            else:
-                print("Invalid option, please try again.")
-
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        if opcion == "1":
+            crear_slice()
+        elif opcion == "2":
+            editar_slice()
+        elif opcion == "3":
+            listar_slices()
+        elif opcion == "4":
+            borrar_slice()
+        elif opcion == "5":
+            listar_consumo()
+        elif opcion == "6":
+            print("Importar imagen de VM (opción aún no implementada).")
+        elif opcion == "7":
+            print("Generar credenciales de consola (opción aún no implementada).")
+        elif opcion == "8":
+            print("Cerrando sesión...")
+            global AUTH_TOKEN
+            AUTH_TOKEN = None
+            logged_in = False  # Forzar al usuario a iniciar sesión nuevamente
+        elif opcion == "9":
+            print("Saliendo del programa.")
+            sys.exit(0)
+        else:
+            print("Opción no válida. Intente nuevamente.")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(init_db())
+    asyncio.run(main())

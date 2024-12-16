@@ -103,4 +103,6 @@ async def main():
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    while True:
+        asyncio.run(main())
+        time.sleep(60 * 2.5)

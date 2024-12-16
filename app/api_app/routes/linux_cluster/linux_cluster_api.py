@@ -1,5 +1,6 @@
 import traceback
 from datetime import datetime, timezone
+from statistics import mean, stdev
 
 from beanie import PydanticObjectId
 from fastapi import FastAPI, HTTPException, Request
@@ -38,17 +39,34 @@ async def get_workers_usage():
     for worker in workers:
         print(f'Monitoreando el worker: {worker.hostname} ({worker.ip})')
 
-        """
-        username = 'ubuntu'  # Asignar el hostname como username (ajustar si es diferente)
-        ip = '10.20.12.238'  # Obtener la contraseña del worker
-        password = 'kotrix123'
-        # Obtener los datos de CPU, RAM, discos y núcleos
-        cpu_usage = get_cpu_usage(ip, username, password)
-        ram_usage_percentage = get_ram_usage(ip, username, password)
-        ram_info = get_ram_info(ip, username, password)
-        disk_usage = get_disk_usage(ip, username, password)
-        cpu_cores_info = get_cpu_cores_info(ip, username, password)
-        """
+        # Obtener el histórico de los últimos N registros de uso del worker
+        historical_data = await WorkerUsage.filter(worker_id=worker.id, timestamp__gte=datetime.utcnow() - timedelta(days=30)).all()
+
+        # Extraer los valores históricos de uso
+        cpu_usages = [data.cpu_usage for data in historical_data]
+        ram_usages = [data.ram_usage_percentage for data in historical_data]
+        ram_totals = [data.ram_total_gb for data in historical_data]
+        ram_avails = [data.ram_available_gb for data in historical_data]
+        cpu_cores = [data.total_cores for data in historical_data]
+        idle_cores = [data.idle_cores_percentage for data in historical_data]
+        disk_usages = [data.disk_usage for data in historical_data]
+
+        # Calcular el promedio y desviación estándar de los valores históricos
+        cpu_usage_avg = mean(cpu_usages) if cpu_usages else 0
+        cpu_usage_stdev = stdev(cpu_usages) if len(cpu_usages) > 1 else 0
+
+        ram_usage_avg = mean(ram_usages) if ram_usages else 0
+        ram_usage_stdev = stdev(ram_usages) if len(ram_usages) > 1 else 0
+
+        ram_total_avg = mean(ram_totals) if ram_totals else 0
+        ram_available_avg = mean(ram_avails) if ram_avails else 0
+
+        cpu_cores_avg = mean(cpu_cores) if cpu_cores else 0
+        idle_cores_avg = mean(idle_cores) if idle_cores else 0
+
+        disk_usage_avg = mean(disk_usages) if disk_usages else 0
+
+        # Obtener los datos de uso actuales
         username = worker.hostname  # Asignar el hostname como username (ajustar si es diferente)
         password = worker.password_hashed  # Obtener la contraseña del worker
 
@@ -58,6 +76,11 @@ async def get_workers_usage():
         ram_info = get_ram_info(worker.ip, username, password)
         disk_usage = get_disk_usage(worker.ip, username, password)
         cpu_cores_info = get_cpu_cores_info(worker.ip, username, password)
+
+        # Estimar si el valor de consumo actual es coherente con los valores históricos
+        cpu_usage_normalized = abs(cpu_usage - cpu_usage_avg) <= cpu_usage_stdev
+        ram_usage_normalized = abs(ram_usage_percentage - ram_usage_avg) <= ram_usage_stdev
+        disk_usage_normalized = abs(disk_usage - disk_usage_avg) <= (disk_usage_avg * 0.1)  # 10% tolerancia
 
         # Estructurar los datos obtenidos para este worker
         worker_usage_data = {
@@ -71,7 +94,10 @@ async def get_workers_usage():
             'total_cores': cpu_cores_info['total_cores'],
             'idle_cores_percentage': float(cpu_cores_info['idle_cores_percentage']),
             'disk_usage': disk_usage,  # Lista de diccionarios con información del disco
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.utcnow().isoformat(),
+            'cpu_usage_normalized': cpu_usage_normalized,
+            'ram_usage_normalized': ram_usage_normalized,
+            'disk_usage_normalized': disk_usage_normalized
         }
 
         # Añadir los datos del worker a la lista de uso
